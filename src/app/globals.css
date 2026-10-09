@@ -1,26 +1,165 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: <html data-theme="dark">, or system preference when no choice is saved. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * Coverage palette — "pitch-book": navy ink on warm paper, one brass accent.
+ * Every text/background pair below meets WCAG AA (4.5:1) in both themes.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #f6f4ee;
+  --surface: #ffffff;
+  --surface-2: #efece3;
+  --ink: #0d1b2a;
+  --ink-2: #33414f;
+  --muted: #5a6573;
+  --rule: #d9d4c7;
+  --rule-strong: #b9b2a1;
+  --navy: #11294a;
+  --navy-hover: #1b3a64;
+  --on-navy: #f6f4ee;
+  --brass: #8a6a1f;
+  --brass-soft: #f3e9cf;
+  --focus: #b8862b;
+  --danger: #b42318;
+  --danger-soft: #fdecea;
+  --success: #1e6b3a;
+  --success-soft: #e3f2e8;
+  --warning: #7a5600;
+  --warning-soft: #fdf1cf;
+
+  /* Stage chips */
+  --stage-contacted-bg: #e7e5df;
+  --stage-contacted-fg: #3c4450;
+  --stage-scheduled-bg: #fbe7a6;
+  --stage-scheduled-fg: #5c4300;
+  --stage-called-bg: #cfead7;
+  --stage-called-fg: #17532d;
+
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root[data-theme="dark"] {
+  --paper: #0a121c;
+  --surface: #0f1a27;
+  --surface-2: #152335;
+  --ink: #ebe7dc;
+  --ink-2: #c9c4b7;
+  --muted: #9aa5b3;
+  --rule: #223349;
+  --rule-strong: #34496a;
+  --navy: #d9b45a;
+  --navy-hover: #e6c574;
+  --on-navy: #0a121c;
+  --brass: #d9b45a;
+  --brass-soft: #2a2414;
+  --focus: #e6c574;
+  --danger: #ff8a7a;
+  --danger-soft: #3a1a17;
+  --success: #7fd19b;
+  --success-soft: #12301f;
+  --warning: #f3cd6b;
+  --warning-soft: #33290f;
+
+  --stage-contacted-bg: #263445;
+  --stage-contacted-fg: #d3d9e1;
+  --stage-scheduled-bg: #4a3b0e;
+  --stage-scheduled-fg: #fde59a;
+  --stage-called-bg: #173d27;
+  --stage-called-fg: #a6e8bb;
+
+  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --paper: #0a121c;
+    --surface: #0f1a27;
+    --surface-2: #152335;
+    --ink: #ebe7dc;
+    --ink-2: #c9c4b7;
+    --muted: #9aa5b3;
+    --rule: #223349;
+    --rule-strong: #34496a;
+    --navy: #d9b45a;
+    --navy-hover: #e6c574;
+    --on-navy: #0a121c;
+    --brass: #d9b45a;
+    --brass-soft: #2a2414;
+    --focus: #e6c574;
+    --danger: #ff8a7a;
+    --danger-soft: #3a1a17;
+    --success: #7fd19b;
+    --success-soft: #12301f;
+    --warning: #f3cd6b;
+    --warning-soft: #33290f;
+
+    --stage-contacted-bg: #263445;
+    --stage-contacted-fg: #d3d9e1;
+    --stage-scheduled-bg: #4a3b0e;
+    --stage-scheduled-fg: #fde59a;
+    --stage-called-bg: #173d27;
+    --stage-called-fg: #a6e8bb;
+
+    color-scheme: dark;
   }
 }
 
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-navy: var(--navy);
+  --color-navy-hover: var(--navy-hover);
+  --color-on-navy: var(--on-navy);
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --color-focus: var(--focus);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+html {
+  background: var(--paper);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum" 1;
+}
+
+/* One consistent, highly visible focus ring for keyboard users. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--brass-soft);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
