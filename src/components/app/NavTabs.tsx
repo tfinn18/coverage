@@ -21,7 +21,7 @@ export function NavTabs() {
             href={tab.href}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "relative flex items-center px-2.5 text-sm font-medium transition-colors sm:px-3",
+              "relative flex items-center whitespace-nowrap px-2.5 text-sm font-medium transition-colors sm:px-3",
               active ? "text-ink" : "text-muted hover:text-ink",
             )}
           >

@@ -22,7 +22,11 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
 - `src/app/(app)/*` — contacts, calls, account (protected by `src/lib/supabase/proxy.ts`)
 - `src/app/auth/{callback,confirm,signout}/route.ts` — OAuth code exchange, email-link verification, POST logout
 - `src/lib/supabase/{client,server,proxy}.ts` — browser client, per-request server client, session refresh + route guard
-- `src/lib/` — pure, framework-free logic (unit-tested). `src/components/ui` — shared primitives
+- `src/lib/` — pure, framework-free logic (unit-tested): `contacts/` (stages, follow-up status, filter/sort, export),
+  `csv/`, `linkedin/`. `src/lib/data/` — Supabase queries used by client components
+- `src/components/ui` — shared primitives (Button, TextField, Alert, Menu, Dialog, Toast)
+- `src/components/contacts` — the Contacts grid: `ContactsView` (state), `ContactsTable`/`ContactRow` (cells),
+  `useAutosave` (debounced per-contact saves with retry)
 - `supabase/migrations/*.sql` — schema source of truth; applied by pasting into the Supabase SQL Editor, in order
 - `src/lib/database.types.ts` — hand-maintained DB types; update alongside migrations
 
@@ -39,4 +43,10 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
   Fonts: `font-serif` (Source Serif 4, headings/wordmark), `font-sans` (IBM Plex Sans), `font-mono` (IBM Plex Mono).
 - User-facing errors are friendly sentences (see `src/lib/auth/errors.ts`), never raw API messages.
 - Accessibility: labelled inputs, visible focus (global `:focus-visible` ring), keyboard-operable menus.
+- Contacts grid: edits update local state immediately and save via `useAutosave` (debounced, merged per contact).
+  Row order is recomputed only when sort/filter/search change or rows are added/removed, so rows never jump while
+  typing. Cells carry `data-row`/`data-col` for keyboard navigation (Enter/Shift+Enter/arrows).
+- Never read the clock (`Date.now()`, `new Date()`) during render in a component that can prerender; compute it in
+  the browser (event handlers or after data loads). Server Supabase clients call `connection()` first.
+- CSV export neutralizes spreadsheet formulas (`=`, `+`, `-`, `@`) and round-trips with the generic CSV import.
 - Env vars are documented in `.env.example`; `.env.local` is git-ignored.

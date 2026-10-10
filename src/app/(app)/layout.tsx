@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </a>
       <header className="sticky top-0 z-30 border-b border-rule bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/80">
         <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
-          <Wordmark href="/contacts" />
+          <Wordmark href="/contacts" compact />
           <NavTabs />
           <div className="ml-auto">
             <Suspense fallback={<div className="h-8 w-8 animate-pulse rounded-full bg-surface-2" aria-hidden="true" />}>

@@ -18,7 +18,16 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-export function Wordmark({ href = "/", className }: { href?: string; className?: string }) {
+export function Wordmark({
+  href = "/",
+  className,
+  compact = false,
+}: {
+  href?: string;
+  className?: string;
+  /** Hide the word on very narrow screens, keeping just the mark. */
+  compact?: boolean;
+}) {
   return (
     <Link
       href={href}
@@ -26,7 +35,9 @@ export function Wordmark({ href = "/", className }: { href?: string; className?:
       aria-label="Coverage home"
     >
       <LogoMark />
-      <span className="font-serif text-[1.35rem] font-semibold tracking-tight">Coverage</span>
+      <span className={cn("font-serif text-[1.35rem] font-semibold tracking-tight", compact && "hidden min-[440px]:inline")}>
+        Coverage
+      </span>
     </Link>
   );
 }
