@@ -1,6 +1,8 @@
 // Types for the Supabase schema in supabase/migrations.
 // Hand-written in the same shape `supabase gen types typescript` produces; keep in sync with migrations.
 
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
 export type ContactStage = "contacted" | "call_scheduled" | "called";
 
 export type Database = {
@@ -23,6 +25,7 @@ export type Database = {
           follow_up_date: string | null;
           notes: string;
           linkedin_url: string | null;
+          email: string | null;
           is_example: boolean;
           created_at: string;
           updated_at: string;
@@ -37,6 +40,7 @@ export type Database = {
           follow_up_date?: string | null;
           notes?: string;
           linkedin_url?: string | null;
+          email?: string | null;
           is_example?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -51,11 +55,26 @@ export type Database = {
           follow_up_date?: string | null;
           notes?: string;
           linkedin_url?: string | null;
+          email?: string | null;
           is_example?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Relationships: [];
+      };
+      contact_notes: {
+        Row: { contact_id: string; user_id: string; doc: Json; created_at: string; updated_at: string };
+        Insert: { contact_id: string; user_id?: string; doc?: Json; created_at?: string; updated_at?: string };
+        Update: { contact_id?: string; user_id?: string; doc?: Json; created_at?: string; updated_at?: string };
+        Relationships: [
+          {
+            foreignKeyName: "contact_notes_contact_id_fkey";
+            columns: ["contact_id"];
+            isOneToOne: true;
+            referencedRelation: "contacts";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       calls: {
         Row: {

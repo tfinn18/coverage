@@ -5,7 +5,7 @@ checking the live one.
 
 ## Supabase
 
-- [ ] Migrations `0001` → `0004` in `supabase/migrations/` have been run, in order, in the SQL Editor.
+- [ ] Migrations `0001` → `0005` in `supabase/migrations/` have been run, in order, in the SQL Editor.
 - [ ] **Authentication → URL Configuration**
   - Site URL: `https://coverage-green.vercel.app`
   - Redirect URLs: `https://coverage-green.vercel.app/**` and `http://localhost:3000/**`
@@ -42,8 +42,8 @@ checking the live one.
 
 ## Smoke test after each deploy
 
-Automated: `E2E_BASE_URL=https://coverage-green.vercel.app npm run test:e2e` (10 tests: sign-in redirect, add/edit/
-delete a contact, calendar panel, and accessibility scans of every page).
+Automated: `E2E_BASE_URL=https://coverage-green.vercel.app npm run test:e2e` (12 tests: sign-in redirect, add/edit/
+delete a contact, calendar panel, the notes panel on desktop and phone, and accessibility scans of every page).
 
 By hand, about 5 minutes:
 
@@ -54,5 +54,6 @@ By hand, about 5 minutes:
 - [ ] **Try with example data** → contacts, follow-up flags, and calls appear → **Remove example data**.
 - [ ] Import a real LinkedIn **Save to PDF** profile and check the name, company, and title.
 - [ ] Drag a "Call scheduled" contact onto the calendar; open the call → **Add to Google Calendar**.
+- [ ] **Open notes** on a contact → type a question, press Enter for the next one → close and reopen; it's saved.
 - [ ] **Export CSV** opens correctly in Excel or Google Sheets.
 - [ ] Account settings → delete a throwaway account → its data is gone.

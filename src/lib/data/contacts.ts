@@ -1,4 +1,4 @@
-import type { Call, Contact, Database } from "@/lib/database.types";
+import type { Call, Contact, Database, Json } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/client";
 
 export type ContactPatch = Database["public"]["Tables"]["contacts"]["Update"];
@@ -28,18 +28,24 @@ export async function updateContact(id: string, patch: ContactPatch): Promise<vo
   if (error) throw error;
 }
 
-/** Deletes a contact (its calls cascade) and returns what's needed to undo the delete. */
-export async function deleteContact(id: string): Promise<{ calls: Call[] }> {
+export type DeletedContactExtras = { calls: Call[]; notesDoc: Json | null };
+
+/** Deletes a contact (its calls and notes cascade) and returns what's needed to undo the delete. */
+export async function deleteContact(id: string): Promise<DeletedContactExtras> {
   const supabase = createClient();
-  const { data: calls, error: callsError } = await supabase.from("calls").select("*").eq("contact_id", id);
+  const [{ data: calls, error: callsError }, { data: notes, error: notesError }] = await Promise.all([
+    supabase.from("calls").select("*").eq("contact_id", id),
+    supabase.from("contact_notes").select("doc").eq("contact_id", id).maybeSingle(),
+  ]);
   if (callsError) throw callsError;
+  if (notesError) throw notesError;
   const { error } = await supabase.from("contacts").delete().eq("id", id);
   if (error) throw error;
-  return { calls };
+  return { calls, notesDoc: notes?.doc ?? null };
 }
 
-/** Puts a deleted contact back with the same id, plus any calls that were removed with it. */
-export async function restoreContact(contact: Contact, calls: Call[]): Promise<void> {
+/** Puts a deleted contact back with the same id, plus the calls and notes that were removed with it. */
+export async function restoreContact(contact: Contact, { calls, notesDoc }: DeletedContactExtras): Promise<void> {
   const supabase = createClient();
   const { user_id: _userId, ...row } = contact;
   const { error } = await supabase.from("contacts").insert(row);
@@ -49,6 +55,10 @@ export async function restoreContact(contact: Contact, calls: Call[]): Promise<v
       .from("calls")
       .insert(calls.map(({ user_id: _u, ...call }) => call));
     if (callsError) throw callsError;
+  }
+  if (notesDoc !== null) {
+    const { error: notesError } = await supabase.from("contact_notes").insert({ contact_id: contact.id, doc: notesDoc });
+    if (notesError) throw notesError;
   }
 }
 
@@ -60,13 +70,16 @@ export async function insertExampleData(): Promise<Contact[]> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("contacts")
-    .insert(contacts.map(({ key, ...c }) => ({ ...c, id: ids.get(key) })))
+    .insert(contacts.map(({ key, doc, ...c }) => ({ ...c, id: ids.get(key) })))
     .select("*");
   if (error) throw error;
   const { error: callsError } = await supabase
     .from("calls")
     .insert(calls.map((c) => ({ contact_id: ids.get(c.key)!, starts_at: c.startsAt.toISOString() })));
   if (callsError) throw callsError;
+  const notes = contacts.filter((c) => c.doc).map((c) => ({ contact_id: ids.get(c.key)!, doc: c.doc as unknown as Json }));
+  const { error: notesError } = await supabase.from("contact_notes").insert(notes);
+  if (notesError) throw notesError;
   return data;
 }
 

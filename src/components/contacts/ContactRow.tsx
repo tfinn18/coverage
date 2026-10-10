@@ -13,6 +13,7 @@ export type RowHandlers = {
   onCommit: (id: string) => void;
   onDelete: (id: string) => void;
   onEditLinkedIn: (id: string) => void;
+  onOpenNotes: (id: string) => void;
 };
 
 const CELL_INPUT =
@@ -58,17 +59,19 @@ export const ContactRow = memo(function ContactRow({
   rowIndex,
   today,
   handlers,
+  notesOpen,
 }: {
   contact: Contact;
   rowIndex: number;
   today: string;
   handlers: RowHandlers;
+  notesOpen: boolean;
 }) {
   const who = contact.name.trim() || contact.company.trim() || "new contact";
   const status = followUpStatus(contact.follow_up_date, today);
   const flagId = `flag-${contact.id}`;
 
-  const text = (field: "company" | "name" | "title" | "notes", col: number, placeholder: string) => (
+  const text = (field: "company" | "name" | "title", col: number, placeholder: string) => (
     <input
       type="text"
       value={contact[field]}
@@ -78,7 +81,7 @@ export const ContactRow = memo(function ContactRow({
       placeholder={placeholder}
       data-row={rowIndex}
       data-col={col}
-      maxLength={field === "notes" ? 5000 : 300}
+      maxLength={300}
       className={CELL_INPUT}
     />
   );
@@ -87,7 +90,8 @@ export const ContactRow = memo(function ContactRow({
     <tr
       data-id={contact.id}
       className={cn(
-        "group border-b border-rule bg-surface hover:bg-surface-2/60",
+        "group border-b border-rule hover:bg-surface-2/60",
+        notesOpen ? "bg-brass-soft/60" : "bg-surface",
         status === "overdue" && "shadow-[inset_3px_0_0_var(--danger)]",
         status === "today" && "shadow-[inset_3px_0_0_var(--warning)]",
       )}
@@ -159,7 +163,33 @@ export const ContactRow = memo(function ContactRow({
           <FollowUpFlag status={status} id={flagId} />
         </div>
       </td>
-      <td className="border-r border-rule p-0">{text("notes", 5, "Notes")}</td>
+      <td className="border-r border-rule p-0">
+        <div className="flex h-10 items-center gap-2 pl-3 pr-1.5">
+          <span
+            className={cn("min-w-0 flex-1 truncate text-sm", contact.notes.trim() ? "text-ink-2" : "text-muted")}
+            title={contact.notes.trim() || undefined}
+          >
+            {contact.notes.trim().split("\n")[0] || "No notes yet"}
+          </span>
+          <button
+            type="button"
+            onClick={() => handlers.onOpenNotes(contact.id)}
+            aria-label={`Open notes for ${who}`}
+            aria-expanded={notesOpen}
+            data-row={rowIndex}
+            data-col={5}
+            data-notes-button={contact.id}
+            className={cn(
+              "shrink-0 rounded-md border px-2 py-1 text-xs font-medium",
+              notesOpen
+                ? "border-brass bg-surface text-ink"
+                : "border-rule-strong bg-surface text-ink-2 hover:border-ink hover:text-ink",
+            )}
+          >
+            Open notes
+          </button>
+        </div>
+      </td>
       <td className="w-12 p-0 text-center">
         <Menu
           buttonLabel={`Actions for ${who}`}

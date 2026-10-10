@@ -10,6 +10,7 @@ export type ImportCandidate = {
   follow_up_date: string | null;
   notes: string;
   linkedin_url: string | null;
+  email: string | null;
   /** Where it came from, e.g. a PDF file name. Shown in the review table. */
   source?: string;
   /** A problem the user should look at (e.g. "Couldn't read this PDF"). */
@@ -29,6 +30,7 @@ export function candidate(fields: Partial<Omit<ImportCandidate, "key">>): Import
     follow_up_date: null,
     notes: "",
     linkedin_url: null,
+    email: null,
     ...fields,
   };
 }

@@ -37,6 +37,8 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
 - `src/components/calls` — Call Schedule: `CallsView` (state + actions), `WeekCalendar` (FullCalendar v6, loaded
   client-only via `next/dynamic`), `ReadyPanel` (drag sources), `CallPopover`, `BookDialog` (keyboard booking).
   Pure helpers in `src/lib/calls/` (Ready/Coming up lists, slot math, Google Calendar link)
+- `src/components/notes` — the notes panel (`NotesPanel`, `ListEditor`, `AutoTextarea`). The document format and
+  pure helpers (plain-text copy, list editing, mailto) live in `src/lib/notes/doc.ts`; queries in `src/lib/data/notes.ts`
 - `docs/DEPLOYMENT.md` — production setup and post-deploy smoke-test checklist; `docs/screenshots/` — README images
 - `tests/fixtures/` — sample LinkedIn PDFs (regenerate with `node scripts/make-pdf-fixtures.mjs`) and CSVs
 - `supabase/migrations/*.sql` — schema source of truth; applied by pasting into the Supabase SQL Editor, in order
@@ -65,6 +67,10 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
   layout applies it before paint.
 - Never read the clock (`Date.now()`, `new Date()`) during render in a component that can prerender; compute it in
   the browser (event handlers or after data loads). Server Supabase clients call `connection()` first.
+- Notes: the grid never edits notes inline. `contact_notes.doc` (JSON, parsed with `parseNotesDoc`) is the source of
+  truth; `contacts.notes` is its plain-text copy (`notesToText`), rewritten on every save and used for preview,
+  search, CSV export and the call popover. Imported or legacy free-text notes become Key advice bullets
+  (`notesDocFromText`). The panel is keyed by contact id and flushes pending saves when it closes or switches.
 - Calendar: FullCalendar is pinned to v6.1.x (MIT core + interaction plugin only; no premium plugins). Calls are
   30 minutes. Booking someone at Contacted promotes them to Call scheduled. Theme overrides live under
   `.coverage-calendar` in `globals.css`. Every drag interaction has a keyboard/tap alternative (Book…, Change time).

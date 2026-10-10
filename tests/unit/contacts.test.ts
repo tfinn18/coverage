@@ -18,6 +18,7 @@ function contact(overrides: Partial<Contact> & { id: string }): Contact {
     follow_up_date: null,
     notes: "",
     linkedin_url: null,
+    email: null,
     is_example: false,
     created_at: "2026-10-01T00:00:00Z",
     updated_at: "2026-10-01T00:00:00Z",
@@ -100,11 +101,11 @@ describe("CSV export", () => {
 
   it("exports contacts with readable stage labels", () => {
     const csv = contactsToCsv([
-      contact({ id: "x", company: "Lazard", name: "Eve Li", title: "Analyst", stage: "call_scheduled", follow_up_date: "2026-10-20", notes: "Ask about RX, M&A", linkedin_url: "https://www.linkedin.com/in/eveli" }),
+      contact({ id: "x", company: "Lazard", name: "Eve Li", title: "Analyst", stage: "call_scheduled", follow_up_date: "2026-10-20", notes: "Ask about RX, M&A", linkedin_url: "https://www.linkedin.com/in/eveli", email: "eve@example.com" }),
     ]);
     expect(csv).toBe(
-      "Company,Name,Title,Stage,Follow-up date,Notes,LinkedIn URL\r\n" +
-        'Lazard,Eve Li,Analyst,Call scheduled,2026-10-20,"Ask about RX, M&A",https://www.linkedin.com/in/eveli\r\n',
+      "Company,Name,Title,Stage,Follow-up date,Notes,LinkedIn URL,Email\r\n" +
+        'Lazard,Eve Li,Analyst,Call scheduled,2026-10-20,"Ask about RX, M&A",https://www.linkedin.com/in/eveli,eve@example.com\r\n',
     );
   });
 });

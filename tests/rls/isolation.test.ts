@@ -64,6 +64,11 @@ describe.skipIf(!configured)("Row Level Security isolation", () => {
       .single();
     if (callError) throw callError;
     callId = call.id;
+
+    const { error: notesError } = await alice.client
+      .from("contact_notes")
+      .insert({ contact_id: contactId, doc: { call: { keyAdvice: ["private advice"] } } });
+    if (notesError) throw notesError;
   });
 
   afterAll(async () => {
@@ -130,9 +135,28 @@ describe.skipIf(!configured)("Row Level Security isolation", () => {
     expect(error?.code).toBe("42501");
   });
 
+  it("keeps notes private: no reading, editing, deleting or attaching notes to someone else's contact", async () => {
+    const read = await bob.client.from("contact_notes").select("doc").eq("contact_id", contactId);
+    expect(read.data).toEqual([]);
+
+    const edit = await bob.client.from("contact_notes").update({ doc: { hacked: true } }).eq("contact_id", contactId).select();
+    expect(edit.data).toEqual([]);
+
+    const removed = await bob.client.from("contact_notes").delete().eq("contact_id", contactId).select();
+    expect(removed.data).toEqual([]);
+
+    const attach = await bob.client.from("contact_notes").insert({ contact_id: contactId, doc: {} });
+    expect(attach.error?.code).toBe("42501");
+
+    const mine = await alice.client.from("contact_notes").select("doc").eq("contact_id", contactId).single();
+    expect(mine.data?.doc).toEqual({ call: { keyAdvice: ["private advice"] } });
+  });
+
   it("shows logged-out visitors nothing", async () => {
     const anon = newClient();
     const { data } = await anon.from("contacts").select("id").eq("id", contactId);
     expect(data ?? []).toEqual([]);
+    const notes = await anon.from("contact_notes").select("doc").eq("contact_id", contactId);
+    expect(notes.data ?? []).toEqual([]);
   });
 });

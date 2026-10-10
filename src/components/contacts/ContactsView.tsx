@@ -3,6 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ImportDialog } from "@/components/import/ImportDialog";
+import { NotesPanel } from "@/components/notes/NotesPanel";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Toast, type ToastData } from "@/components/ui/Toast";
@@ -47,6 +48,7 @@ function blankContact(id: string): Contact {
     follow_up_date: null,
     notes: "",
     linkedin_url: null,
+    email: null,
     is_example: false,
     created_at: now,
     updated_at: now,
@@ -67,6 +69,7 @@ export function ContactsView() {
   const [toast, setToast] = useState<ToastData | null>(null);
   const [linkedInFor, setLinkedInFor] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [notesFor, setNotesFor] = useState<string | null>(null);
   const [examplesBusy, setExamplesBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(
     params.get("welcome")
@@ -156,6 +159,7 @@ export function ContactsView() {
       },
       onCommit: (id) => void flush(id),
       onEditLinkedIn: (id) => setLinkedInFor(id),
+      onOpenNotes: (id) => setNotesFor(id),
       onDelete: async (id) => {
         const contact = contactsRef.current.find((c) => c.id === id);
         if (!contact) return;
@@ -163,6 +167,7 @@ export function ContactsView() {
         cancel(id);
         updateContacts((prev) => prev.filter((c) => c.id !== id));
         setOrder((prev) => prev.filter((x) => x !== id));
+        setNotesFor((open) => (open === id ? null : open));
 
         const putBack = () => {
           updateContacts((prev) => [...prev.slice(0, index), contact, ...prev.slice(index)]);
@@ -170,14 +175,14 @@ export function ContactsView() {
         };
 
         try {
-          const { calls } = await deleteContact(id);
+          const extras = await deleteContact(id);
           showToast({
             message: `Deleted ${displayName(contact)}.`,
             action: {
               label: "Undo",
               onClick: async () => {
                 try {
-                  await restoreContact(contact, calls);
+                  await restoreContact(contact, extras);
                   putBack();
                 } catch {
                   showToast({ tone: "error", message: "Couldn't restore that contact. Please try again." });
@@ -263,11 +268,32 @@ export function ContactsView() {
     setExamplesBusy(false);
   }
 
+  const onNotesSaved = useCallback(
+    (id: string, patch: Partial<Pick<Contact, "notes" | "email">>) =>
+      updateContacts((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c))),
+    [updateContacts],
+  );
+
+  const closeNotes = useCallback(() => {
+    const id = notesFor;
+    setNotesFor(null);
+    // Return focus to the button that opened the panel.
+    if (id) requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-notes-button="${id}"]`)?.focus());
+  }, [notesFor]);
+
+  const notesContact = notesFor ? byId.get(notesFor) : undefined;
   const exampleCount = useMemo(() => (contacts ?? []).filter((c) => c.is_example).length, [contacts]);
   const linkedInContact = linkedInFor ? byId.get(linkedInFor) : undefined;
 
   return (
-    <div className="flex flex-col gap-5">
+    // With the notes panel open on desktop, the page shrinks to the left half so the table stays visible.
+    <div
+      className={
+        notesContact
+          ? "flex min-w-0 flex-col gap-5 lg:w-[calc(50vw_-_max(0px,(100vw_-_1400px)_/_2)_-_2.5rem)]"
+          : "flex flex-col gap-5"
+      }
+    >
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h1 className="font-serif text-3xl font-semibold tracking-tight">Contacts</h1>
@@ -352,6 +378,7 @@ export function ContactsView() {
             sort={options.sort}
             onSort={onSort}
             handlers={handlers}
+            notesOpenId={notesFor}
             emptyMessage={
               filtered && (
                 <>
@@ -385,6 +412,10 @@ export function ContactsView() {
             setLinkedInFor(null);
           }}
         />
+      )}
+
+      {notesContact && (
+        <NotesPanel key={notesContact.id} contact={notesContact} onClose={closeNotes} onSaved={onNotesSaved} />
       )}
 
       {importOpen && (

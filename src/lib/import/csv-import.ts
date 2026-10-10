@@ -1,6 +1,7 @@
 import { parseStage } from "@/lib/contacts/stages";
 import { parseCsv } from "@/lib/csv/parse";
 import { normalizeLinkedInUrl } from "@/lib/linkedin/url";
+import { isValidEmail } from "@/lib/notes/doc";
 import { candidate, type ImportCandidate } from "./candidate";
 
 export const MAX_CSV_BYTES = 10 * 1024 * 1024;
@@ -43,7 +44,11 @@ const TRACKER_HEADERS: Record<string, keyof Omit<ImportCandidate, "key" | "sourc
   linkedinprofile: "linkedin_url",
   url: "linkedin_url",
   profileurl: "linkedin_url",
+  email: "email",
+  emailaddress: "email",
 };
+
+const emailOrNull = (value: string) => (isValidEmail(value) ? value.trim() : null);
 
 /** Accepts 2026-10-09, 10/9/2026, 10/9/26 (US order) and returns YYYY-MM-DD, or null. */
 export function parseDate(text: string): string | null {
@@ -74,7 +79,14 @@ function findLinkedInHeader(rows: string[][]): number {
 function fromLinkedIn(rows: string[][], headerIndex: number): ImportCandidate[] {
   const header = rows[headerIndex].map(norm);
   const col = (name: string) => header.indexOf(name);
-  const [first, last, url, company, position] = ["firstname", "lastname", "url", "company", "position"].map(col);
+  const [first, last, url, company, position, email] = [
+    "firstname",
+    "lastname",
+    "url",
+    "company",
+    "position",
+    "emailaddress",
+  ].map(col);
   const get = (r: string[], i: number) => (i >= 0 ? (r[i] ?? "").trim() : "");
 
   return rows.slice(headerIndex + 1).map((r) =>
@@ -84,6 +96,7 @@ function fromLinkedIn(rows: string[][], headerIndex: number): ImportCandidate[] 
       company: get(r, company),
       title: get(r, position),
       linkedin_url: normalizeLinkedInUrl(get(r, url)),
+      email: emailOrNull(get(r, email)),
     }),
   );
 }
@@ -104,6 +117,7 @@ function fromTracker(rows: string[][]): ImportCandidate[] | null {
       else if (target === "stage") fields.stage = parseStage(value) ?? "contacted";
       else if (target === "follow_up_date") fields.follow_up_date = parseDate(value);
       else if (target === "linkedin_url") fields.linkedin_url = normalizeLinkedInUrl(value);
+      else if (target === "email") fields.email = emailOrNull(value);
       else fields[target] = value;
     });
     if (!fields.name && (first || last)) fields.name = [first, last].filter(Boolean).join(" ");

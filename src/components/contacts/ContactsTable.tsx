@@ -16,7 +16,8 @@ function onGridKeyDown(e: React.KeyboardEvent<HTMLTableSectionElement>) {
   if (row === undefined || col === undefined) return;
 
   let delta = 0;
-  if (e.key === "Enter" && target.tagName !== "SELECT") delta = e.shiftKey ? -1 : 1;
+  // Enter on a button (e.g. "Open notes") activates it rather than moving down.
+  if (e.key === "Enter" && target.tagName !== "SELECT" && target.tagName !== "BUTTON") delta = e.shiftKey ? -1 : 1;
   else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && TEXT_COLUMNS.has(col) && !e.altKey)
     delta = e.key === "ArrowDown" ? 1 : -1;
   else if (e.key === "Escape") {
@@ -43,6 +44,7 @@ export function ContactsTable({
   onSort,
   handlers,
   emptyMessage,
+  notesOpenId,
 }: {
   contacts: Contact[];
   today: string;
@@ -50,10 +52,11 @@ export function ContactsTable({
   onSort: (key: SortKey) => void;
   handlers: RowHandlers;
   emptyMessage?: React.ReactNode;
+  notesOpenId: string | null;
 }) {
   return (
     <div className="relative overflow-x-auto rounded-lg border border-rule bg-surface shadow-[0_1px_0_var(--rule)]">
-      <table className="w-full min-w-[1120px] table-fixed border-collapse text-left">
+      <table className="w-full min-w-[1160px] table-fixed border-collapse text-left">
         <caption className="sr-only">
           Contacts. Each cell is editable and saves automatically. Use Tab to move across, Enter to move down.
         </caption>
@@ -91,7 +94,14 @@ export function ContactsTable({
         </thead>
         <tbody onKeyDown={onGridKeyDown}>
           {contacts.map((contact, index) => (
-            <ContactRow key={contact.id} contact={contact} rowIndex={index} today={today} handlers={handlers} />
+            <ContactRow
+              key={contact.id}
+              contact={contact}
+              rowIndex={index}
+              today={today}
+              handlers={handlers}
+              notesOpen={notesOpenId === contact.id}
+            />
           ))}
           {contacts.length === 0 && emptyMessage && (
             <tr>

@@ -99,7 +99,9 @@ describe("Connections.csv import", () => {
       company: "Morgan Stanley",
       title: "Vice President, M&A",
       linkedin_url: "https://www.linkedin.com/in/marcusoneill",
+      email: "marcus@example.com",
     });
+    expect(result.candidates[0].email).toBeNull();
     expect(result.candidates[3].title).toBe('Student, "Finance Society" President');
     expect(result.candidates[2].name).toBe("José Álvarez");
   });
@@ -137,8 +139,8 @@ describe("tracker CSV import", () => {
 
   it("round-trips Coverage's own CSV export", () => {
     const exported =
-      "Company,Name,Title,Stage,Follow-up date,Notes,LinkedIn URL\r\n" +
-      'Lazard,Eve Li,Analyst,Call scheduled,2026-10-20,"Ask about RX, M&A",https://www.linkedin.com/in/eveli\r\n';
+      "Company,Name,Title,Stage,Follow-up date,Notes,LinkedIn URL,Email\r\n" +
+      'Lazard,Eve Li,Analyst,Call scheduled,2026-10-20,"Ask about RX, M&A",https://www.linkedin.com/in/eveli,eve@example.com\r\n';
     const r = parseImportCsv(exported);
     expect(r.ok && r.candidates[0]).toMatchObject({
       company: "Lazard",
@@ -147,6 +149,7 @@ describe("tracker CSV import", () => {
       follow_up_date: "2026-10-20",
       notes: "Ask about RX, M&A",
       linkedin_url: "https://www.linkedin.com/in/eveli",
+      email: "eve@example.com",
     });
   });
 

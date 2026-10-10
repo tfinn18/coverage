@@ -4,8 +4,10 @@ import { useRef, useState } from "react";
 import { Dialog } from "@/components/ui/Dialog";
 import { cn } from "@/lib/cn";
 import { insertContacts } from "@/lib/data/contacts";
+import { insertNotesDocs } from "@/lib/data/notes";
 import type { Contact } from "@/lib/database.types";
 import type { ImportCandidate } from "@/lib/import/candidate";
+import { notesDocFromText, notesToText } from "@/lib/notes/doc";
 import { ReviewStep } from "./ReviewStep";
 import { CsvSource, PdfSource, UrlSource, type SourceResult } from "./sources";
 
@@ -51,16 +53,27 @@ export function ImportDialog({
     const saved: Contact[] = [];
     try {
       for (let i = 0; i < selected.length; i += CHUNK) {
-        const rows = selected.slice(i, i + CHUNK).map((c) => ({
-          name: c.name,
-          company: c.company,
-          title: c.title,
-          stage: c.stage,
-          follow_up_date: c.follow_up_date,
-          notes: c.notes.slice(0, 5000),
-          linkedin_url: c.linkedin_url,
-        }));
-        saved.push(...(await insertContacts(rows)));
+        // Ids are assigned here so imported notes can be attached to the right contact.
+        const batch = selected.slice(i, i + CHUNK).map((c) => {
+          const doc = c.notes.trim() ? notesDocFromText(c.notes.slice(0, 5000)) : null;
+          return { id: crypto.randomUUID(), c, doc };
+        });
+        saved.push(
+          ...(await insertContacts(
+            batch.map(({ id, c, doc }) => ({
+              id,
+              name: c.name,
+              company: c.company,
+              title: c.title,
+              stage: c.stage,
+              follow_up_date: c.follow_up_date,
+              notes: doc ? notesToText(doc, c.company) : "",
+              linkedin_url: c.linkedin_url,
+              email: c.email,
+            })),
+          )),
+        );
+        await insertNotesDocs(batch.filter((b) => b.doc).map((b) => ({ contact_id: b.id, doc: b.doc! })));
       }
       onImported(saved, skipped);
     } catch {

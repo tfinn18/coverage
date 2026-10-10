@@ -3,7 +3,7 @@ import { toCsv } from "@/lib/csv/write";
 import { localDateString } from "./followup";
 import { STAGE_LABEL } from "./stages";
 
-export const EXPORT_HEADERS = ["Company", "Name", "Title", "Stage", "Follow-up date", "Notes", "LinkedIn URL"];
+export const EXPORT_HEADERS = ["Company", "Name", "Title", "Stage", "Follow-up date", "Notes", "LinkedIn URL", "Email"];
 
 /** Builds a CSV in the same column layout the generic CSV import accepts, so exports round-trip. */
 export function contactsToCsv(contacts: Contact[]): string {
@@ -17,6 +17,7 @@ export function contactsToCsv(contacts: Contact[]): string {
       c.follow_up_date ?? "",
       c.notes,
       c.linkedin_url ?? "",
+      c.email ?? "",
     ]),
   ]);
 }

@@ -1,5 +1,6 @@
 import type { ContactStage } from "@/lib/database.types";
 import { localDateString } from "@/lib/contacts/followup";
+import { notesDocFromText, notesToText, type NotesDoc } from "@/lib/notes/doc";
 
 type ExampleContact = {
   key: string;
@@ -134,19 +135,50 @@ export function addWeekdays(from: Date, count: number): Date {
 
 export const EXAMPLE_COUNT = EXAMPLES.length;
 
+/** Fuller notes for two examples, so the notes panel shows what a finished page looks like. */
+function richNotes(key: string, now: Date): NotesDoc | null {
+  if (key === "maya") {
+    const doc = notesDocFromText("");
+    doc.prep.background = ["Bryant '24, joined the TMT group as a first-year analyst"];
+    doc.prep.whyCompany = "Mid-size firm, so analysts get real deal responsibility early.";
+    doc.prep.questions = ["What does a typical week look like in TMT?", "How did you prepare for technical interviews?"];
+    doc.call.date = localDateString(addWeekdays(now, -1));
+    doc.call.keyAdvice = ["Know the three statements cold", "Have a clear story for why banking"];
+    doc.call.firm = ["Recently closed two software sell-side deals"];
+    doc.call.people = ["Grace Kim (campus recruiting)"];
+    doc.call.askedFor = "If she'd pass my resume along before the application deadline.";
+    doc.followUp.subject = "Thank you for your time";
+    doc.followUp.body =
+      "Hi Maya,\n\nThank you for taking the time to talk yesterday. Your advice about the three statements was really helpful.\n\nBest,\n";
+    doc.followUp.nextSteps = ["Send resume by Friday", "Follow up after the info session"];
+    return doc;
+  }
+  if (key === "daniel") {
+    const doc = notesDocFromText("");
+    doc.prep.background = ["Same school, recruited from a non-target", "Moved from Big 4 to M&A"];
+    doc.prep.questions = ["How did you network into banking from a non-target?", "What made you switch from accounting?"];
+    return doc;
+  }
+  return null;
+}
+
 /** The example contacts and calls, with dates relative to `now` so follow-ups and calls always look current. */
 export function buildExampleData(now: Date) {
-  const contacts = EXAMPLES.map((e) => ({
-    key: e.key,
-    name: e.name,
-    company: e.company,
-    title: e.title,
-    stage: e.stage,
-    follow_up_date: e.followUp === null ? null : localDateString(addDays(now, e.followUp)),
-    notes: e.notes,
-    linkedin_url: null,
-    is_example: true,
-  }));
+  const contacts = EXAMPLES.map((e) => {
+    const doc = richNotes(e.key, now) ?? (e.notes ? notesDocFromText(e.notes) : null);
+    return {
+      key: e.key,
+      name: e.name,
+      company: e.company,
+      title: e.title,
+      stage: e.stage,
+      follow_up_date: e.followUp === null ? null : localDateString(addDays(now, e.followUp)),
+      notes: doc ? notesToText(doc, e.company) : "",
+      linkedin_url: null,
+      is_example: true,
+      doc,
+    };
+  });
   const calls = EXAMPLES.filter((e) => e.call).map((e) => {
     const day = addWeekdays(now, e.call!.weekdays);
     const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), e.call!.hour, e.call!.minute);

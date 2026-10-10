@@ -19,9 +19,13 @@ spreadsheet-style contact grid plus a weekly call calendar.
 
 ## What it does
 
-- **Contacts grid.** Company, Name, Title, Stage, Follow-up date, Notes. Every cell is editable like a spreadsheet
-  (Tab across, Enter down) and auto-saves. Sort any column, search, filter by stage or "Follow-ups due"; overdue and
+- **Contacts grid.** Company, Name, Title, Stage, Follow-up date, Notes. Cells are editable like a spreadsheet
+  (Tab across, Enter down) and auto-save. Sort any column, search, filter by stage or "Follow-ups due"; overdue and
   due-today rows are flagged. Delete with undo, CSV export.
+- **Notes for every contact.** "Open notes" opens a side panel (half the screen on desktop, full screen on a phone)
+  with a structured document: Prep (their background, why this firm, numbered questions), Call notes (date, key
+  advice, the firm, people to contact, what you asked for), and Follow-up (a thank-you email you can copy or open in
+  your email app, a "Thank-you sent" date, next steps).
 - **Stages.** Contacted (grey) → Call scheduled (yellow) → Called (green).
 - **LinkedIn import, without scraping.** Drop profile PDFs saved with LinkedIn's *More → Save to PDF* (parsed in the
   browser), upload `Connections.csv` from LinkedIn's data export (or any tracker CSV), or paste profile URLs. Every
@@ -91,6 +95,10 @@ API layer to secure: the database decides what each request may see.
 | `profiles` | `id` → `auth.users`, `full_name`, `created_at` (created by a trigger on sign-up) |
 | `contacts` | `id`, `user_id`, `company`, `name`, `title`, `stage` (`contacted` \| `call_scheduled` \| `called`), `follow_up_date`, `notes`, `linkedin_url`, `is_example`, `created_at`, `updated_at` |
 | `calls` | `id`, `user_id`, `contact_id` → `contacts`, `starts_at`, `duration_minutes` (default 30) |
+| `contact_notes` | `contact_id` → `contacts` (one per contact), `user_id`, `doc` (JSON notes document), `updated_at` |
+
+`contacts` also has an optional `email`. `contacts.notes` holds a plain-text copy of the notes document so the grid
+preview, search, and CSV export never need to load every document.
 
 Every foreign key to `auth.users` is `on delete cascade`, so deleting an account removes all of its data. SQL lives in
 [`supabase/migrations`](supabase/migrations).
@@ -99,13 +107,13 @@ Every foreign key to `auth.users` is `on delete cascade`, so deleting an account
 
 - **Row Level Security on every table.** Separate `select` / `insert` / `update` / `delete` policies require
   `auth.uid() = user_id` (or `= id` for profiles). Logged-out requests match no policy. The `calls` insert/update
-  policies also check that the linked contact belongs to the same user, so you can't attach a call to someone else's
-  contact. ([`0002_rls.sql`](supabase/migrations/0002_rls.sql))
+  policies (and the same policies on `contact_notes`) also check that the linked contact belongs to the same user, so
+  you can't attach a call or notes to someone else's contact. ([`0002_rls.sql`](supabase/migrations/0002_rls.sql))
 - **No service role key anywhere.** The app, scripts, and tests use only the publishable (anon) key. The one
   admin-like action, "Delete my account", is a `security definer` function that can only delete the caller's own
   `auth.users` row. ([`0003_functions.sql`](supabase/migrations/0003_functions.sql))
 - **Proven by a test.** [`tests/rls/isolation.test.ts`](tests/rls/isolation.test.ts) signs in as two ordinary users and
-  checks that user B can't read, update, delete, or insert into user A's contacts, calls, or profile, and that
+  checks that user B can't read, update, delete, or insert into user A's contacts, calls, notes, or profile, and that
   logged-out requests see nothing.
 - **Sessions.** `@supabase/ssr` keeps the session in HTTP cookies; `proxy.ts` validates the JWT (`getClaims`) on each
   request. Server code never trusts an unverified session.
@@ -129,7 +137,7 @@ cp .env.example .env.local     # add your Supabase URL and publishable key
 npm run dev                    # http://localhost:3000
 ```
 
-1. **Database:** in the Supabase SQL Editor, run the files in `supabase/migrations/` in order (0001 → 0004).
+1. **Database:** in the Supabase SQL Editor, run the files in `supabase/migrations/` in order (0001 → 0005).
 2. **Auth URLs:** in Supabase → Authentication → URL Configuration, set the Site URL and add
    `http://localhost:3000/**` to Redirect URLs.
 3. **Google sign-in (optional):** create an OAuth client (Web application) in Google Cloud, add
@@ -141,9 +149,9 @@ npm run dev                    # http://localhost:3000
 | Command | What it checks |
 | --- | --- |
 | `npm run lint` · `npm run typecheck` | ESLint and TypeScript |
-| `npm test` | 45 unit tests: CSV and PDF parsers (with fixture files), import mapping and duplicate detection, sort/filter, follow-up flags, scheduling helpers, Google Calendar links, safe redirects |
-| `npm run test:rls` | 7 checks that one user can't touch another's rows (needs two test accounts in `.env.local`) |
-| `npm run test:e2e` | Playwright: sign in, add a contact, reload, see it on the calendar, delete it; plus axe WCAG 2.1 AA scans of 8 pages in light and dark mode. `E2E_BASE_URL=https://coverage-green.vercel.app` runs it against production |
+| `npm test` | 56 unit tests: CSV and PDF parsers (with fixture files), import mapping and duplicate detection, sort/filter, follow-up flags, scheduling helpers, Google Calendar links, the notes document and its list editing, mailto links, safe redirects |
+| `npm run test:rls` | 8 checks that one user can't touch another's rows, including notes (needs two test accounts in `.env.local`) |
+| `npm run test:e2e` | Playwright: sign in, add a contact, reload, see it on the calendar, delete it; write and reopen notes (Enter/Backspace lists, Copy, Open in email, Escape); the notes sheet at phone width; plus axe WCAG 2.1 AA scans of 8 pages and the open notes panel in light and dark mode. `E2E_BASE_URL=https://coverage-green.vercel.app` runs it against production |
 
 GitHub Actions runs lint, typecheck, unit tests, and a production build on every push. The RLS and end-to-end suites
 need real credentials, so they run locally.
@@ -194,7 +202,7 @@ e2e/                    Playwright end-to-end and accessibility tests
   spreadsheet-style editing, LinkedIn PDF/CSV import, and a drag-and-drop call calendar.
 - Secured multi-user data with Postgres Row Level Security and verified isolation with an automated two-user test; no
   privileged keys in the app.
-- Wrote 60+ automated tests (Vitest, Playwright, axe accessibility scans) and set up GitHub Actions CI on every push.
+- Wrote 75+ automated tests (Vitest, Playwright, axe accessibility scans) and set up GitHub Actions CI on every push.
 
 ## Known limitations
 
