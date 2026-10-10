@@ -42,8 +42,8 @@ checking the live one.
 
 ## Smoke test after each deploy
 
-Automated: `E2E_BASE_URL=https://coverage-green.vercel.app npm run test:e2e` (12 tests: sign-in redirect, add/edit/
-delete a contact, calendar panel, the notes panel on desktop and phone, and accessibility scans of every page).
+Automated: `E2E_BASE_URL=https://coverage-green.vercel.app npm run test:e2e` (13 tests: sign-in redirect, add/edit/
+delete a contact, calendar panel, the notes panel on desktop and phone, old-layout notes, and accessibility scans of every page).
 
 By hand, about 5 minutes:
 

@@ -140,13 +140,16 @@ function richNotes(key: string, now: Date): NotesDoc | null {
   if (key === "maya") {
     const doc = notesDocFromText("");
     doc.prep.background = ["Bryant '24, joined the TMT group as a first-year analyst"];
-    doc.prep.whyCompany = "Mid-size firm, so analysts get real deal responsibility early.";
     doc.prep.questions = ["What does a typical week look like in TMT?", "How did you prepare for technical interviews?"];
     doc.call.date = localDateString(addWeekdays(now, -1));
-    doc.call.keyAdvice = ["Know the three statements cold", "Have a clear story for why banking"];
-    doc.call.firm = ["Recently closed two software sell-side deals"];
+    doc.call.notes = [
+      "Know the three statements cold",
+      "Have a clear story for why banking",
+      "Group recently closed two software sell-side deals",
+      "Asked if she'd pass my resume along before the deadline",
+    ];
+    doc.call.whyCompany = "Mid-size firm, so analysts get real deal responsibility early.";
     doc.call.people = ["Grace Kim (campus recruiting)"];
-    doc.call.askedFor = "If she'd pass my resume along before the application deadline.";
     doc.followUp.subject = "Thank you for your time";
     doc.followUp.body =
       "Hi Maya,\n\nThank you for taking the time to talk yesterday. Your advice about the three statements was really helpful.\n\nBest,\n";

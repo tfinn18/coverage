@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { hasTestUser, logIn } from "./helpers";
+import { createClient } from "@supabase/supabase-js";
+import { hasTestUser, logIn, testUser } from "./helpers";
 
 test.skip(!hasTestUser, "Set TEST_USER_A_EMAIL and TEST_USER_A_PASSWORD in .env.local");
 
@@ -35,7 +36,15 @@ test("notes panel: write prep, call notes and a thank-you, then reopen after rel
   for (const heading of ["Prep", "Call notes", "Follow-up"]) {
     await expect(panel.getByRole("heading", { name: heading, exact: true })).toBeVisible();
   }
-  await expect(panel.getByText("Why Halcyon Partners?")).toBeVisible();
+  // Prep: background + questions. Call notes: date, notes, Why [company]?, people. Removed fields are gone.
+  const labels = await panel.locator("section").evaluateAll((sections) =>
+    sections.map((sec) => [...sec.querySelectorAll("h3, p[id]")].map((el) => el.textContent)),
+  );
+  expect(labels).toEqual([
+    ["Prep", "Their background", "My questions"],
+    ["Call notes", "Call date", "Notes", "Why Halcyon Partners?", "People to contact"],
+    ["Follow-up", "Thank-you email", "Next steps"],
+  ]);
 
   // Desktop: the panel takes the right half and the table is still visible on the left.
   const box = (await panel.boundingBox())!;
@@ -68,7 +77,8 @@ test("notes panel: write prep, call notes and a thank-you, then reopen after rel
   const q2Height = await panel.getByLabel("Question 2").evaluate((el) => el.getBoundingClientRect().height);
   expect(q1Height).toBeGreaterThanOrEqual(q2Height);
 
-  await panel.getByLabel("Advice 1").fill("Know the three statements cold");
+  await panel.getByLabel("Note 1", { exact: true }).fill("Know the three statements cold");
+  await panel.getByLabel("Why Halcyon Partners?").fill("Small teams, real responsibility");
   await panel.getByLabel("Subject").fill("Thank you, Nadia");
   await panel.getByLabel("Body").fill("Hi Nadia,\nThanks for your time today.");
 
@@ -77,7 +87,13 @@ test("notes panel: write prep, call notes and a thank-you, then reopen after rel
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
     "Subject: Thank you, Nadia\n\nHi Nadia,\nThanks for your time today.",
   );
-  await expect(panel.getByRole("link", { name: "Open in email" })).toHaveAttribute(
+  const gmail = panel.getByRole("link", { name: /Open in Gmail/ });
+  await expect(gmail).toHaveAttribute(
+    "href",
+    "https://mail.google.com/mail/?view=cm&fs=1&to=nadia%40example.com&su=Thank%20you%2C%20Nadia&body=Hi%20Nadia%2C%0AThanks%20for%20your%20time%20today.",
+  );
+  await expect(gmail).toHaveAttribute("target", "_blank");
+  await expect(panel.getByRole("link", { name: "Other email app" })).toHaveAttribute(
     "href",
     "mailto:nadia@example.com?subject=Thank%20you%2C%20Nadia&body=Hi%20Nadia%2C%0D%0AThanks%20for%20your%20time%20today.",
   );
@@ -102,13 +118,14 @@ test("notes panel: write prep, call notes and a thank-you, then reopen after rel
 
   // The grid shows a preview, and everything is still there after a reload.
   const row = page.locator("tr", { has: page.getByLabel(`Name for ${name}`) });
-  await expect(row.getByText(/^Key advice: Know the three statements cold/)).toBeVisible();
+  await expect(row.getByText(/^Notes: Know the three statements cold/)).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: `Open notes for ${name}` }).click();
   await expect(panel.getByLabel("Email (optional)")).toHaveValue("nadia@example.com");
   await expect(panel.getByLabel("Question 1")).toHaveValue(/^How did you recruit/);
   await expect(panel.getByLabel("Question 2")).toHaveValue("What does a typical week look like?");
-  await expect(panel.getByLabel("Advice 1")).toHaveValue("Know the three statements cold");
+  await expect(panel.getByLabel("Note 1", { exact: true })).toHaveValue("Know the three statements cold");
+  await expect(panel.getByLabel("Why Halcyon Partners?")).toHaveValue("Small teams, real responsibility");
   await expect(panel.getByLabel("Thank-you sent")).toBeChecked();
   await panel.getByRole("button", { name: "Close notes" }).click();
   await expect(panel).toHaveCount(0);
@@ -126,8 +143,46 @@ test("notes panel is a full-screen sheet on a phone", async ({ page }) => {
   const box = (await panel.boundingBox())!;
   expect(box).toMatchObject({ x: 0, y: 0, width: 390, height: 844 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
-  await panel.getByLabel("Background note 1").fill("Moved from consulting");
+  await panel.getByLabel("Background 1").fill("Moved from consulting");
   await expect(panel.getByText("All changes saved")).toBeVisible({ timeout: 10_000 });
   await panel.getByRole("button", { name: "Close notes" }).click();
   await deleteContact(page, name);
+});
+
+test("notes written in the old layout open in the new one with nothing lost", async ({ page }) => {
+  // Seed a contact whose notes use the removed fields, as saved by the previous version.
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { persistSession: false },
+  });
+  await sb.auth.signInWithPassword(testUser);
+  const name = `Old Layout ${Date.now()}`;
+  const { data: contact, error } = await sb
+    .from("contacts")
+    .insert({ name, company: "Crestline Partners", title: "Associate", notes: "Key advice: Network early" })
+    .select()
+    .single();
+  if (error) throw error;
+  const { error: notesError } = await sb.from("contact_notes").insert({
+    contact_id: contact.id,
+    doc: {
+      v: 1,
+      prep: { background: [], whyCompany: "Their ER team is growing", questions: ["How big is the team?"] },
+      call: { date: null, keyAdvice: ["Network early"], firm: ["New coverage of fintech"], people: [], askedFor: "A resume review" },
+      followUp: { subject: "", body: "", sentOn: null, nextSteps: [] },
+    },
+  });
+  if (notesError) throw notesError;
+
+  try {
+    await logIn(page);
+    await page.getByRole("button", { name: `Open notes for ${name}` }).click();
+    const panel = page.getByRole("dialog", { name });
+    await expect(panel.getByLabel("Note 1", { exact: true })).toHaveValue("Network early");
+    await expect(panel.getByLabel("Note 2", { exact: true })).toHaveValue("New coverage of fintech");
+    await expect(panel.getByLabel("Note 3", { exact: true })).toHaveValue("A resume review");
+    await expect(panel.getByLabel("Why Crestline Partners?")).toHaveValue("Their ER team is growing");
+    await expect(panel.getByLabel("Question 1")).toHaveValue("How big is the team?");
+  } finally {
+    await sb.from("contacts").delete().eq("id", contact.id);
+  }
 });

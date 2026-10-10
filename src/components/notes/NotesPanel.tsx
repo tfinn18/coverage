@@ -12,6 +12,7 @@ import { updateContact } from "@/lib/data/contacts";
 import type { Contact } from "@/lib/database.types";
 import {
   emptyNotesDoc,
+  gmailComposeUrl,
   isValidEmail,
   mailtoUrl,
   notesDocFromText,
@@ -30,7 +31,7 @@ function withoutEmptyItems(doc: NotesDoc): NotesDoc {
   return {
     ...doc,
     prep: { ...doc.prep, background: strip(doc.prep.background), questions: strip(doc.prep.questions) },
-    call: { ...doc.call, keyAdvice: strip(doc.call.keyAdvice), firm: strip(doc.call.firm), people: strip(doc.call.people) },
+    call: { ...doc.call, notes: strip(doc.call.notes), people: strip(doc.call.people) },
     followUp: { ...doc.followUp, nextSteps: strip(doc.followUp.nextSteps) },
   };
 }
@@ -246,22 +247,10 @@ export function NotesPanel({
               <Field label="Their background" id={labelId("background")}>
                 <ListEditor
                   labelId={labelId("background")}
-                  itemLabel="Background note"
+                  itemLabel="Background"
                   placeholder="Add a note"
                   items={doc.prep.background}
                   onChange={(background) => update((d) => ({ ...d, prep: { ...d.prep, background } }))}
-                />
-              </Field>
-              <Field label={`Why ${company || "this firm"}?`} id={labelId("why")}>
-                <AutoTextarea
-                  aria-labelledby={labelId("why")}
-                  minRows={2}
-                  placeholder="Add a note"
-                  value={doc.prep.whyCompany}
-                  onChange={(e) => {
-                    const whyCompany = e.target.value;
-                    update((d) => ({ ...d, prep: { ...d.prep, whyCompany } }));
-                  }}
                 />
               </Field>
               <Field label="My questions" id={labelId("questions")}>
@@ -291,33 +280,34 @@ export function NotesPanel({
                   />
                 </div>
               </Field>
-              {(
-                [
-                  ["keyAdvice", "Key advice", "Advice"],
-                  ["firm", "About the firm and industry", "Firm note"],
-                  ["people", "People to contact", "Person"],
-                ] as const
-              ).map(([key, label, item]) => (
-                <Field key={key} label={label} id={labelId(key)}>
-                  <ListEditor
-                    labelId={labelId(key)}
-                    itemLabel={item}
-                    placeholder="Add a note"
-                    items={doc.call[key]}
-                    onChange={(items) => update((d) => ({ ...d, call: { ...d.call, [key]: items } }))}
-                  />
-                </Field>
-              ))}
-              <Field label="What I asked for at the end" id={labelId("asked")}>
+              <Field label="Notes" id={labelId("notes")}>
+                <ListEditor
+                  labelId={labelId("notes")}
+                  itemLabel="Note"
+                  placeholder="Add a note"
+                  items={doc.call.notes}
+                  onChange={(notes) => update((d) => ({ ...d, call: { ...d.call, notes } }))}
+                />
+              </Field>
+              <Field label={`Why ${company || "this firm"}?`} id={labelId("why")}>
                 <AutoTextarea
-                  aria-labelledby={labelId("asked")}
+                  aria-labelledby={labelId("why")}
                   minRows={2}
                   placeholder="Add a note"
-                  value={doc.call.askedFor}
+                  value={doc.call.whyCompany}
                   onChange={(e) => {
-                    const askedFor = e.target.value;
-                    update((d) => ({ ...d, call: { ...d.call, askedFor } }));
+                    const whyCompany = e.target.value;
+                    update((d) => ({ ...d, call: { ...d.call, whyCompany } }));
                   }}
+                />
+              </Field>
+              <Field label="People to contact" id={labelId("people")}>
+                <ListEditor
+                  labelId={labelId("people")}
+                  itemLabel="Person"
+                  placeholder="Add a note"
+                  items={doc.call.people}
+                  onChange={(people) => update((d) => ({ ...d, call: { ...d.call, people } }))}
                 />
               </Field>
             </Section>
@@ -358,10 +348,18 @@ export function NotesPanel({
                       Copy
                     </Button>
                     <a
-                      href={mailtoUrl(validEmail, doc.followUp.subject, doc.followUp.body)}
+                      href={gmailComposeUrl(validEmail, doc.followUp.subject, doc.followUp.body)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className={buttonClasses("primary", "sm")}
                     >
-                      Open in email
+                      Open in Gmail<span className="sr-only"> (opens in a new tab)</span>
+                    </a>
+                    <a
+                      href={mailtoUrl(validEmail, doc.followUp.subject, doc.followUp.body)}
+                      className="rounded px-1 text-xs font-medium text-ink-2 underline underline-offset-2 hover:text-ink"
+                    >
+                      Other email app
                     </a>
                     <span role="status" className="text-xs text-muted">
                       {copied === "copied"

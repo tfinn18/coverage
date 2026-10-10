@@ -23,9 +23,9 @@ spreadsheet-style contact grid plus a weekly call calendar.
   (Tab across, Enter down) and auto-save. Sort any column, search, filter by stage or "Follow-ups due"; overdue and
   due-today rows are flagged. Delete with undo, CSV export.
 - **Notes for every contact.** "Open notes" opens a side panel (half the screen on desktop, full screen on a phone)
-  with a structured document: Prep (their background, why this firm, numbered questions), Call notes (date, key
-  advice, the firm, people to contact, what you asked for), and Follow-up (a thank-you email you can copy or open in
-  your email app, a "Thank-you sent" date, next steps).
+  with a structured document: Prep (their background, numbered questions), Call notes (date, notes, why this firm,
+  people to contact), and Follow-up (a thank-you email you can copy, open in Gmail, or open in any email app, a
+  "Thank-you sent" date, next steps).
 - **Stages.** Contacted (grey) → Call scheduled (yellow) → Called (green).
 - **LinkedIn import, without scraping.** Drop profile PDFs saved with LinkedIn's *More → Save to PDF* (parsed in the
   browser), upload `Connections.csv` from LinkedIn's data export (or any tracker CSV), or paste profile URLs. Every
@@ -149,9 +149,9 @@ npm run dev                    # http://localhost:3000
 | Command | What it checks |
 | --- | --- |
 | `npm run lint` · `npm run typecheck` | ESLint and TypeScript |
-| `npm test` | 56 unit tests: CSV and PDF parsers (with fixture files), import mapping and duplicate detection, sort/filter, follow-up flags, scheduling helpers, Google Calendar links, the notes document and its list editing, mailto links, safe redirects |
+| `npm test` | 60 unit tests: CSV and PDF parsers (with fixture files), import mapping and duplicate detection, sort/filter, follow-up flags, scheduling helpers, Google Calendar links, the notes document (including converting the old layout), list editing, Gmail and mailto links, safe redirects |
 | `npm run test:rls` | 8 checks that one user can't touch another's rows, including notes (needs two test accounts in `.env.local`) |
-| `npm run test:e2e` | Playwright: sign in, add a contact, reload, see it on the calendar, delete it; write and reopen notes (Enter/Backspace lists, Copy, Open in email, Escape); the notes sheet at phone width; plus axe WCAG 2.1 AA scans of 8 pages and the open notes panel in light and dark mode. `E2E_BASE_URL=https://coverage-green.vercel.app` runs it against production |
+| `npm run test:e2e` | Playwright: sign in, add a contact, reload, see it on the calendar, delete it; write and reopen notes (Enter/Backspace lists, Copy, Open in Gmail, Escape), notes from the old layout open in the new one; the notes sheet at phone width; plus axe WCAG 2.1 AA scans of 8 pages and the open notes panel in light and dark mode. `E2E_BASE_URL=https://coverage-green.vercel.app` runs it against production |
 
 GitHub Actions runs lint, typecheck, unit tests, and a production build on every push. The RLS and end-to-end suites
 need real credentials, so they run locally.

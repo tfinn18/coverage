@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useLayoutEffect, useRef } from "react";
+import { forwardRef, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/cn";
 
 const BASE =
@@ -10,6 +10,11 @@ const BASE =
 const PLAIN = "border-transparent bg-transparent px-2 py-1 hover:border-rule";
 /** A visible box, for longer writing like an email body. */
 const BOXED = "border-rule-strong bg-surface px-3 py-2";
+
+function fitToContent(el: HTMLTextAreaElement) {
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight + 2}px`;
+}
 
 /** A textarea that grows with its content, so notes read like a document instead of a scrolling box. */
 export const AutoTextarea = forwardRef<
@@ -29,10 +34,23 @@ export const AutoTextarea = forwardRef<
 
   useLayoutEffect(() => {
     const el = inner.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight + 2}px`;
+    if (el) fitToContent(el);
   }, [value]);
+
+  // Re-measure when the width changes (window resize, phone rotation, panel layout), since text re-wraps.
+  useEffect(() => {
+    const el = inner.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    let width = el.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth !== width) {
+        width = el.clientWidth;
+        fitToContent(el);
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return <textarea ref={setRef} rows={minRows} value={value} className={cn(BASE, boxed ? BOXED : PLAIN, className)} {...props} />;
 });

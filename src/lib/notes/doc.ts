@@ -2,19 +2,22 @@
  * The notes document for one contact, stored as JSON in contact_notes.doc.
  * Lists are arrays of strings (one per bullet / numbered item); empty items are kept while
  * editing so the cursor has somewhere to go, and dropped when computing the plain-text copy.
+ *
+ * Version 2 layout. Version 1 documents (with Key advice, About the firm, What I asked for, and
+ * Why [company]? under Prep) are converted by parseNotesDoc, so nothing written earlier is lost.
  */
 export type NotesDoc = {
-  v: 1;
-  prep: { background: string[]; whyCompany: string; questions: string[] };
-  call: { date: string | null; keyAdvice: string[]; firm: string[]; people: string[]; askedFor: string };
+  v: 2;
+  prep: { background: string[]; questions: string[] };
+  call: { date: string | null; notes: string[]; whyCompany: string; people: string[] };
   followUp: { subject: string; body: string; sentOn: string | null; nextSteps: string[] };
 };
 
 export function emptyNotesDoc(): NotesDoc {
   return {
-    v: 1,
-    prep: { background: [], whyCompany: "", questions: [] },
-    call: { date: null, keyAdvice: [], firm: [], people: [], askedFor: "" },
+    v: 2,
+    prep: { background: [], questions: [] },
+    call: { date: null, notes: [], whyCompany: "", people: [] },
     followUp: { subject: "", body: "", sentOn: null, nextSteps: [] },
   };
 }
@@ -24,22 +27,31 @@ const list = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => ty
 const date = (v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
 const obj = (v: unknown): Record<string, unknown> =>
   v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+const lines = (text: string) =>
+  text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 
-/** Reads a stored document, filling in anything missing or malformed with empty values. */
+/**
+ * Reads a stored document, filling in anything missing or malformed with empty values.
+ * Fields from the version 1 layout are folded in: Key advice, About the firm and industry, and
+ * What I asked for at the end become Notes bullets; Why [company]? moves from Prep to Call notes.
+ */
 export function parseNotesDoc(raw: unknown): NotesDoc {
   const d = obj(raw);
   const prep = obj(d.prep);
   const call = obj(d.call);
   const follow = obj(d.followUp);
+  const whyCompany = [str(call.whyCompany), str(prep.whyCompany)].filter((t) => t.trim()).join("\n\n");
   return {
-    v: 1,
-    prep: { background: list(prep.background), whyCompany: str(prep.whyCompany), questions: list(prep.questions) },
+    v: 2,
+    prep: { background: list(prep.background), questions: list(prep.questions) },
     call: {
       date: date(call.date),
-      keyAdvice: list(call.keyAdvice),
-      firm: list(call.firm),
+      notes: [...list(call.notes), ...list(call.keyAdvice), ...list(call.firm), ...lines(str(call.askedFor))],
+      whyCompany,
       people: list(call.people),
-      askedFor: str(call.askedFor),
     },
     followUp: {
       subject: str(follow.subject),
@@ -50,13 +62,10 @@ export function parseNotesDoc(raw: unknown): NotesDoc {
   };
 }
 
-/** Turns free-text notes (e.g. an imported "Notes" column) into Key advice bullets, one per line. */
+/** Turns free-text notes (e.g. an imported "Notes" column) into Notes bullets, one per line. */
 export function notesDocFromText(text: string): NotesDoc {
   const doc = emptyNotesDoc();
-  doc.call.keyAdvice = text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
+  doc.call.notes = lines(text);
   return doc;
 }
 
@@ -71,14 +80,12 @@ export function notesToText(doc: NotesDoc, company: string): string {
   const add = (label: string, value: string) => value.trim() && lines.push(`${label}: ${value.trim()}`);
   const addList = (label: string, items: string[]) => add(label, clean(items).join("; "));
 
-  addList("Key advice", doc.call.keyAdvice);
+  addList("Notes", doc.call.notes);
   addList("Next steps", doc.followUp.nextSteps);
-  addList("About the firm", doc.call.firm);
   addList("People to contact", doc.call.people);
-  add("Asked for", doc.call.askedFor);
+  add(`Why ${company.trim() || "this firm"}?`, doc.call.whyCompany);
   add("Call date", doc.call.date ?? "");
   addList("Background", doc.prep.background);
-  add(`Why ${company.trim() || "this firm"}?`, doc.prep.whyCompany);
   add(
     "My questions",
     clean(doc.prep.questions)
@@ -92,6 +99,21 @@ export function notesToText(doc: NotesDoc, company: string): string {
 /** Text for the "Copy" button: subject line, blank line, body. */
 export function thankYouText(subject: string, body: string): string {
   return [subject.trim() ? `Subject: ${subject.trim()}` : "", body.trim()].filter(Boolean).join("\n\n");
+}
+
+/**
+ * Gmail compose window (opened in a new tab) with the address, subject and body filled in.
+ * Works for anyone signed in to Gmail in that browser; no Google API or OAuth involved.
+ */
+export function gmailComposeUrl(to: string | null, subject: string, body: string): string {
+  const params = [
+    "view=cm",
+    "fs=1",
+    `to=${encodeURIComponent((to ?? "").trim())}`,
+    `su=${encodeURIComponent(subject)}`,
+    `body=${encodeURIComponent(body)}`,
+  ];
+  return `https://mail.google.com/mail/?${params.join("&")}`;
 }
 
 /** mailto: link that opens the user's email app with the address, subject and body filled in. */
