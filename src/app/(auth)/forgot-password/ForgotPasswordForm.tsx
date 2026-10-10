@@ -22,7 +22,7 @@ export function ForgotPasswordForm() {
     setLoading(true);
     const trimmed = email.trim();
     const { error } = await createClient().auth.resetPasswordForEmail(trimmed, {
-      redirectTo: `${siteOrigin()}/auth/confirm`,
+      redirectTo: `${siteOrigin()}/auth/confirm?next=/reset-password`,
     });
     setLoading(false);
     if (error) setError(friendlyAuthError(error));
@@ -32,7 +32,7 @@ export function ForgotPasswordForm() {
   if (sentTo) {
     return (
       <Alert tone="success">
-        If an account exists for <strong>{sentTo}</strong>, a reset link is on its way. It expires in one hour.
+        If an account exists for <strong>{sentTo}</strong>, a reset link is on its way. Open it in this browser; it expires in one hour.
       </Alert>
     );
   }

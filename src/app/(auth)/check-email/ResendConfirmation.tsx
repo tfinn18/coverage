@@ -29,7 +29,7 @@ export function ResendConfirmation() {
       <p>
         We sent a confirmation link to{" "}
         {email ? <strong className="font-semibold text-ink">{email}</strong> : "your email address"}. Click it to
-        activate your account. You&apos;ll land straight in the app.
+        activate your account. Open it in this browser to land straight in the app.
       </p>
       <p className="text-muted">Don&apos;t see it after a minute? Check your spam or promotions folder.</p>
       {status && <Alert tone={status.tone}>{status.text}</Alert>}

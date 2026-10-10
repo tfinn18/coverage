@@ -36,6 +36,8 @@ export function friendlyAuthError(error: AuthLikeError): string {
 /** Messages for `?error=` codes our own routes put in the URL. */
 export const URL_ERROR_MESSAGES: Record<string, string> = {
   link_invalid: "That link is invalid or has expired. Please request a new one.",
+  confirm_other_browser:
+    "If you just clicked your confirmation link, your email is confirmed. Log in below to continue.",
   oauth_failed: "Google sign-in didn't complete. Please try again.",
   session_expired: "Your reset link has expired. Request a new one below.",
 };
