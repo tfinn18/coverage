@@ -163,3 +163,126 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Call Schedule calendar (FullCalendar) ---------- */
+.coverage-calendar {
+  --fc-border-color: var(--rule);
+  --fc-page-bg-color: var(--surface);
+  --fc-neutral-bg-color: var(--surface-2);
+  --fc-today-bg-color: color-mix(in srgb, var(--brass) 7%, transparent);
+  --fc-now-indicator-color: var(--danger);
+  --fc-highlight-color: color-mix(in srgb, var(--brass) 18%, transparent);
+  --fc-event-bg-color: var(--stage-scheduled-bg);
+  --fc-event-border-color: var(--stage-scheduled-bg);
+  --fc-event-text-color: var(--stage-scheduled-fg);
+  --fc-button-text-color: var(--ink);
+  --fc-button-bg-color: var(--surface);
+  --fc-button-border-color: var(--rule-strong);
+  --fc-button-hover-bg-color: var(--surface-2);
+  --fc-button-hover-border-color: var(--rule-strong);
+  --fc-button-active-bg-color: var(--surface-2);
+  --fc-button-active-border-color: var(--ink);
+
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  padding: 0.75rem;
+  font-size: 0.8125rem;
+}
+.coverage-calendar .fc-theme-standard .fc-scrollgrid {
+  border-color: var(--rule);
+}
+.coverage-calendar .fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.coverage-calendar .fc .fc-toolbar-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.coverage-calendar .fc .fc-button {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.375rem;
+  box-shadow: none;
+  text-transform: none;
+}
+.coverage-calendar .fc .fc-button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.coverage-calendar .fc .fc-button-primary:disabled {
+  opacity: 0.5;
+}
+.coverage-calendar .fc .fc-today-button {
+  margin-right: 0.5rem;
+}
+.coverage-calendar .fc .fc-col-header-cell-cushion {
+  padding: 0.4rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.coverage-calendar .fc .fc-day-today .fc-col-header-cell-cushion {
+  color: var(--brass);
+}
+.coverage-calendar .fc .fc-timegrid-slot {
+  height: 2.25rem;
+}
+.coverage-calendar .fc .fc-timegrid-slot-minor {
+  border-top-style: dotted;
+}
+.coverage-calendar .fc .fc-timegrid-slot-label-cushion {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.coverage-calendar .fc .fc-timegrid-now-indicator-line {
+  border-width: 2px 0 0;
+}
+.coverage-calendar .fc-timegrid-event {
+  border-radius: 0.375rem;
+  border-left-width: 3px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgb(13 27 42 / 0.12);
+}
+.coverage-calendar .fc-timegrid-event:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+.coverage-calendar .fc-event.call-call_scheduled,
+.coverage-calendar .fc-event.call-contacted {
+  background: var(--stage-scheduled-bg);
+  border-color: var(--stage-scheduled-fg);
+  color: var(--stage-scheduled-fg);
+}
+.coverage-calendar .fc-event.call-called {
+  background: var(--stage-called-bg);
+  border-color: var(--stage-called-fg);
+  color: var(--stage-called-fg);
+}
+.coverage-calendar .fc-event .fc-event-main {
+  color: inherit;
+}
+.coverage-calendar.is-armed .fc-timegrid-slot-lane {
+  cursor: copy;
+}
+.coverage-calendar.is-armed .fc-timegrid-slot-lane:hover {
+  background: var(--fc-highlight-color);
+}
+/* The drag "mirror" while dragging a person from Ready to schedule. */
+.fc-event-dragging {
+  opacity: 0.9;
+}
+/* FullCalendar darkens focused/selected events; the focus ring above is enough. */
+.coverage-calendar .fc-event:focus::after,
+.coverage-calendar .fc-event-selected::after {
+  background: transparent;
+}

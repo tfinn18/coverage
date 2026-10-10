@@ -69,6 +69,8 @@ export function ContactsView() {
   const [today, setToday] = useState("");
   const contactsRef = useRef<Contact[]>([]);
   const focusIdRef = useRef<string | null>(null);
+  const highlightRef = useRef(false);
+  const focusParam = params.get("focus");
   const { status: saveStatus, schedule, flush, flushAll, cancel, trackInsert } = useAutosave();
 
   const showToast = useCallback((t: Omit<ToastData, "id">) => setToast({ ...t, id: Date.now() }), []);
@@ -92,11 +94,15 @@ export function ContactsView() {
 
   const showLoaded = useCallback((rows: Contact[]) => {
     const now = localDateString();
+    if (focusParam && rows.some((c) => c.id === focusParam)) {
+      focusIdRef.current = focusParam;
+      highlightRef.current = true;
+    }
     contactsRef.current = rows;
     setToday(now);
     setContacts(rows);
     setOrder(visibleContactIds(rows, { ...DEFAULT_OPTIONS, today: now }));
-  }, []);
+  }, [focusParam]);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,12 +120,22 @@ export function ContactsView() {
     fetchContacts().then(showLoaded, () => setLoadError(true));
   }
 
-  // After adding a row, put the cursor in its first cell.
+  // After adding a row (or arriving from "View in Contacts"), put the cursor in that row.
   useEffect(() => {
     const id = focusIdRef.current;
     if (!id) return;
     focusIdRef.current = null;
-    document.querySelector<HTMLInputElement>(`tr[data-id="${id}"] input`)?.focus();
+    const row = document.querySelector<HTMLTableRowElement>(`tr[data-id="${id}"]`);
+    if (!row) return;
+    row.scrollIntoView({ block: "center" });
+    row.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true });
+    if (highlightRef.current) {
+      highlightRef.current = false;
+      row.animate([{ backgroundColor: "var(--brass-soft)" }, { backgroundColor: "transparent" }], {
+        duration: 1800,
+        easing: "ease-out",
+      });
+    }
   }, [order]);
 
   const handlers: RowHandlers = useMemo(

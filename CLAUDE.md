@@ -30,6 +30,9 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
 - `src/lib/import/` — import candidates, duplicate detection (name + company), CSV mapping (LinkedIn Connections.csv
   or a tracker spreadsheet). `src/lib/pdf/` + `src/lib/linkedin/profile-pdf.ts` — pdf.js text → lines → profile fields
 - `src/components/import` — Import dialog: PDF / CSV / URL sources, then an editable, windowed review table
+- `src/components/calls` — Call Schedule: `CallsView` (state + actions), `WeekCalendar` (FullCalendar v6, loaded
+  client-only via `next/dynamic`), `ReadyPanel` (drag sources), `CallPopover`, `BookDialog` (keyboard booking).
+  Pure helpers in `src/lib/calls/` (Ready/Coming up lists, slot math, Google Calendar link)
 - `tests/fixtures/` — sample LinkedIn PDFs (regenerate with `node scripts/make-pdf-fixtures.mjs`) and CSVs
 - `supabase/migrations/*.sql` — schema source of truth; applied by pasting into the Supabase SQL Editor, in order
 - `src/lib/database.types.ts` — hand-maintained DB types; update alongside migrations
@@ -52,6 +55,9 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
   typing. Cells carry `data-row`/`data-col` for keyboard navigation (Enter/Shift+Enter/arrows).
 - Never read the clock (`Date.now()`, `new Date()`) during render in a component that can prerender; compute it in
   the browser (event handlers or after data loads). Server Supabase clients call `connection()` first.
+- Calendar: FullCalendar is pinned to v6.1.x (MIT core + interaction plugin only; no premium plugins). Calls are
+  30 minutes. Booking someone at Contacted promotes them to Call scheduled. Theme overrides live under
+  `.coverage-calendar` in `globals.css`. Every drag interaction has a keyboard/tap alternative (Book…, Change time).
 - Imports: never scrape LinkedIn or call unofficial APIs; only parse files/links the user provides. Every import
   goes through the review step, skips duplicates, and LinkedIn imports start at Contacted with blank follow-up/notes.
   PDFs are parsed in the browser (pdf.js loaded lazily; worker copied to `public/` by `predev`/`prebuild`).
