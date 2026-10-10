@@ -13,7 +13,7 @@ test.describe("signed in", () => {
   test("add a contact, see it saved after reload, then delete it", async ({ page }) => {
     const name = `E2E Person ${Date.now()}`;
     await logIn(page, "/calls");
-    await page.getByRole("link", { name: "Contacts" }).click();
+    await page.getByRole("link", { name: "Contacts", exact: true }).click();
     await expect(page).toHaveURL(/\/contacts$/);
 
     const addButton = page.getByRole("button", { name: /Add (your first )?contact/ }).first();
@@ -32,10 +32,10 @@ test.describe("signed in", () => {
     await expect(page.getByLabel(`Stage for ${name}`)).toHaveValue("call_scheduled");
 
     // They now wait in "Ready to schedule" on the calendar.
-    await page.getByRole("link", { name: "Call Schedule" }).click();
+    await page.getByRole("link", { name: "Call Schedule", exact: true }).click();
     await expect(page.getByRole("button", { name: new RegExp(`^${name}`) })).toBeVisible();
 
-    await page.getByRole("link", { name: "Contacts" }).click();
+    await page.getByRole("link", { name: "Contacts", exact: true }).click();
     await page.getByRole("button", { name: `Actions for ${name}` }).click();
     await page.getByRole("menuitem", { name: "Delete contact" }).click();
     await expect(page.getByText(`Deleted ${name}.`)).toBeVisible();

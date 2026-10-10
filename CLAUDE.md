@@ -37,6 +37,7 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
 - `src/components/calls` — Call Schedule: `CallsView` (state + actions), `WeekCalendar` (FullCalendar v6, loaded
   client-only via `next/dynamic`), `ReadyPanel` (drag sources), `CallPopover`, `BookDialog` (keyboard booking).
   Pure helpers in `src/lib/calls/` (Ready/Coming up lists, slot math, Google Calendar link)
+- `docs/DEPLOYMENT.md` — production setup and post-deploy smoke-test checklist; `docs/screenshots/` — README images
 - `tests/fixtures/` — sample LinkedIn PDFs (regenerate with `node scripts/make-pdf-fixtures.mjs`) and CSVs
 - `supabase/migrations/*.sql` — schema source of truth; applied by pasting into the Supabase SQL Editor, in order
 - `src/lib/database.types.ts` — hand-maintained DB types; update alongside migrations
