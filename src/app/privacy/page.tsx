@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { SiteFooter } from "@/components/SiteFooter";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Wordmark } from "@/components/Wordmark";
 
 export const metadata: Metadata = { title: "Privacy" };
@@ -6,8 +8,9 @@ export const metadata: Metadata = { title: "Privacy" };
 export default function PrivacyPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="mx-auto flex w-full max-w-3xl items-center px-4 py-5 sm:px-6">
+      <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-5 sm:px-6">
         <Wordmark />
+        <ThemeToggle />
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 pt-6 sm:px-6">
         <h1 className="font-serif text-4xl font-semibold tracking-tight">Privacy</h1>
@@ -31,6 +34,7 @@ export default function PrivacyPage() {
           </p>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

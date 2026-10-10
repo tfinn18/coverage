@@ -6,7 +6,7 @@ import FullCalendar from "@fullcalendar/react";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import { useEffect, useRef } from "react";
 
-export type CalendarEvent = EventInput & { id: string; extendedProps: { company: string; stage: string } };
+export type CalendarEvent = EventInput & { id: string; extendedProps: { company: string; stage: string; example: boolean } };
 
 type Props = {
   events: CalendarEvent[];
@@ -24,8 +24,11 @@ function EventContent({ event }: EventContentArg) {
   const company = event.extendedProps.company as string;
   return (
     <div className="flex h-full flex-col overflow-hidden px-1.5 py-0.5 leading-tight">
-      <span className="truncate text-xs font-semibold">{event.title}</span>
-      {company && <span className="truncate text-[11px] opacity-80">{company}</span>}
+      <span className="truncate text-xs font-semibold">
+        {event.extendedProps.example && <span className="mr-1 font-mono text-[9px] uppercase">Example</span>}
+        {event.title}
+      </span>
+      {company && <span className="truncate text-[11px]">{company}</span>}
     </div>
   );
 }
@@ -87,6 +90,10 @@ export default function WeekCalendar({
           onOpenCall(info.event.id, info.el);
         }}
         dateClick={(info: DateClickArg) => onSlotClick(info.date)}
+        datesSet={() => {
+          // FullCalendar's arrow icons are decorative; the buttons already have accessible names.
+          document.querySelectorAll(".coverage-calendar .fc-icon").forEach((icon) => icon.setAttribute("aria-hidden", "true"));
+        }}
         eventDidMount={({ el, event }) => {
           // Make booked calls reachable and operable from the keyboard.
           el.setAttribute("tabindex", "0");

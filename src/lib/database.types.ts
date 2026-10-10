@@ -23,6 +23,7 @@ export type Database = {
           follow_up_date: string | null;
           notes: string;
           linkedin_url: string | null;
+          is_example: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -36,6 +37,7 @@ export type Database = {
           follow_up_date?: string | null;
           notes?: string;
           linkedin_url?: string | null;
+          is_example?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -49,6 +51,7 @@ export type Database = {
           follow_up_date?: string | null;
           notes?: string;
           linkedin_url?: string | null;
+          is_example?: boolean;
           created_at?: string;
           updated_at?: string;
         };

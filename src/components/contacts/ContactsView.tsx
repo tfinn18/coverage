@@ -9,9 +9,17 @@ import { Toast, type ToastData } from "@/components/ui/Toast";
 import { contactsToCsv, exportFileName } from "@/lib/contacts/export";
 import { localDateString } from "@/lib/contacts/followup";
 import { countByStage, visibleContactIds, type SortKey, type ViewOptions } from "@/lib/contacts/view";
-import { deleteContact, fetchContacts, insertContacts, restoreContact } from "@/lib/data/contacts";
+import {
+  deleteContact,
+  deleteExampleData,
+  fetchContacts,
+  insertContacts,
+  insertExampleData,
+  restoreContact,
+} from "@/lib/data/contacts";
 import type { Contact, ContactStage } from "@/lib/database.types";
 import { downloadText } from "@/lib/download";
+import { EXAMPLE_COUNT } from "@/lib/examples";
 import type { RowHandlers } from "./ContactRow";
 import { ContactsTable, TableSkeleton } from "./ContactsTable";
 import { ContactsToolbar } from "./ContactsToolbar";
@@ -39,6 +47,7 @@ function blankContact(id: string): Contact {
     follow_up_date: null,
     notes: "",
     linkedin_url: null,
+    is_example: false,
     created_at: now,
     updated_at: now,
   };
@@ -58,6 +67,7 @@ export function ContactsView() {
   const [toast, setToast] = useState<ToastData | null>(null);
   const [linkedInFor, setLinkedInFor] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [examplesBusy, setExamplesBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(
     params.get("welcome")
       ? "Welcome to Coverage! Your account is ready."
@@ -226,6 +236,34 @@ export function ContactsView() {
     showToast({ message: parts.join(" ") });
   }
 
+  async function addExamples() {
+    setExamplesBusy(true);
+    try {
+      const added = await insertExampleData();
+      const next = [...added, ...contactsRef.current];
+      updateContacts(() => next);
+      applyOptions(options, next);
+    } catch {
+      showToast({ tone: "error", message: "Couldn't add the example data. Please try again." });
+    }
+    setExamplesBusy(false);
+  }
+
+  async function removeExamples() {
+    setExamplesBusy(true);
+    try {
+      await deleteExampleData();
+      const next = contactsRef.current.filter((c) => !c.is_example);
+      updateContacts(() => next);
+      applyOptions(options, next);
+      showToast({ message: "Removed the example data." });
+    } catch {
+      showToast({ tone: "error", message: "Couldn't remove the example data. Please try again." });
+    }
+    setExamplesBusy(false);
+  }
+
+  const exampleCount = useMemo(() => (contacts ?? []).filter((c) => c.is_example).length, [contacts]);
   const linkedInContact = linkedInFor ? byId.get(linkedInFor) : undefined;
 
   return (
@@ -258,6 +296,18 @@ export function ContactsView() {
         </Alert>
       )}
 
+      {exampleCount > 0 && (
+        <Alert tone="warning" className="flex flex-wrap items-center justify-between gap-2">
+          <span>
+            <strong>You&apos;re looking at example data.</strong> The {exampleCount} people and firms tagged
+            &ldquo;Example&rdquo; are made up, so you can try things out.
+          </span>
+          <Button variant="secondary" size="sm" onClick={removeExamples} loading={examplesBusy}>
+            Remove example data
+          </Button>
+        </Alert>
+      )}
+
       {loadError ? (
         <Alert tone="error">
           We couldn&apos;t load your contacts. Check your connection.{" "}
@@ -274,7 +324,12 @@ export function ContactsView() {
           </p>
         </>
       ) : contacts.length === 0 ? (
-        <EmptyState onAdd={addContact} onImport={() => setImportOpen(true)} />
+        <EmptyState
+          onAdd={addContact}
+          onImport={() => setImportOpen(true)}
+          onExamples={addExamples}
+          examplesBusy={examplesBusy}
+        />
       ) : (
         <>
           <ContactsToolbar
@@ -341,7 +396,17 @@ export function ContactsView() {
   );
 }
 
-function EmptyState({ onAdd, onImport }: { onAdd: () => void; onImport: () => void }) {
+function EmptyState({
+  onAdd,
+  onImport,
+  onExamples,
+  examplesBusy,
+}: {
+  onAdd: () => void;
+  onImport: () => void;
+  onExamples: () => void;
+  examplesBusy: boolean;
+}) {
   return (
     <div className="rounded-lg border border-dashed border-rule-strong bg-surface px-6 py-14 text-center">
       <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-brass">Your coverage list</p>
@@ -356,6 +421,18 @@ function EmptyState({ onAdd, onImport }: { onAdd: () => void; onImport: () => vo
           Import from LinkedIn or CSV
         </Button>
       </div>
+      <p className="mt-6 text-sm text-muted">
+        Just looking around?{" "}
+        <button
+          type="button"
+          onClick={onExamples}
+          disabled={examplesBusy}
+          className="font-semibold text-ink underline underline-offset-2 disabled:opacity-60"
+        >
+          {examplesBusy ? "Adding examples…" : "Try with example data"}
+        </button>
+        <span className="block text-xs">Adds {EXAMPLE_COUNT} made-up contacts and a few calls, clearly tagged. Remove them in one click.</span>
+      </p>
     </div>
   );
 }

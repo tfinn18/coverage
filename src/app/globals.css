@@ -286,3 +286,6 @@ body {
 .coverage-calendar .fc-event-selected::after {
   background: transparent;
 }
+.coverage-calendar .fc-event.is-example {
+  border-style: dashed;
+}

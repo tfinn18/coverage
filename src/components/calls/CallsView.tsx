@@ -119,8 +119,12 @@ export function CallsView() {
           title: contact?.name.trim() || "Unnamed contact",
           start,
           end: new Date(start.getTime() + call.duration_minutes * 60_000),
-          classNames: [`call-${contact?.stage ?? "contacted"}`],
-          extendedProps: { company: contact?.company ?? "", stage: contact?.stage ?? "contacted" },
+          classNames: [`call-${contact?.stage ?? "contacted"}`, ...(contact?.is_example ? ["is-example"] : [])],
+          extendedProps: {
+            company: contact?.company ?? "",
+            stage: contact?.stage ?? "contacted",
+            example: Boolean(contact?.is_example),
+          },
         };
       }),
     [calls, byId],

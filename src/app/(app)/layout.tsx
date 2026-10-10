@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { NavTabs } from "@/components/app/NavTabs";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/app/UserMenu";
 import { Wordmark } from "@/components/Wordmark";
 import { getCurrentUser } from "@/lib/auth/user";
@@ -22,7 +23,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-3 px-4 sm:gap-6 sm:px-6">
           <Wordmark href="/contacts" compact />
           <NavTabs />
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
+            <ThemeToggle className="max-[400px]:hidden" />
             <Suspense fallback={<div className="h-8 w-8 animate-pulse rounded-full bg-surface-2" aria-hidden="true" />}>
               <CurrentUserMenu />
             </Suspense>

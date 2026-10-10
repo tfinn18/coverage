@@ -45,6 +45,14 @@ function FollowUpFlag({ status, id }: { status: ReturnType<typeof followUpStatus
   );
 }
 
+export function ExampleTag() {
+  return (
+    <span className="mr-2 shrink-0 rounded border border-dashed border-warning/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning">
+      Example
+    </span>
+  );
+}
+
 export const ContactRow = memo(function ContactRow({
   contact,
   rowIndex,
@@ -88,6 +96,7 @@ export const ContactRow = memo(function ContactRow({
       <td className="border-r border-rule p-0">
         <div className="flex items-center">
           {text("name", 1, "Name")}
+          {contact.is_example && <ExampleTag />}
           {contact.linkedin_url && (
             <a
               href={contact.linkedin_url}

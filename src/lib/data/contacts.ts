@@ -51,3 +51,27 @@ export async function restoreContact(contact: Contact, calls: Call[]): Promise<v
     if (callsError) throw callsError;
   }
 }
+
+/** Adds the clearly labeled example contacts and calls from "Try with example data". */
+export async function insertExampleData(): Promise<Contact[]> {
+  const { buildExampleData } = await import("@/lib/examples");
+  const { contacts, calls } = buildExampleData(new Date());
+  const ids = new Map(contacts.map((c) => [c.key, crypto.randomUUID()]));
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("contacts")
+    .insert(contacts.map(({ key, ...c }) => ({ ...c, id: ids.get(key) })))
+    .select("*");
+  if (error) throw error;
+  const { error: callsError } = await supabase
+    .from("calls")
+    .insert(calls.map((c) => ({ contact_id: ids.get(c.key)!, starts_at: c.startsAt.toISOString() })));
+  if (callsError) throw callsError;
+  return data;
+}
+
+/** Deletes every example contact (their calls cascade). Real contacts are untouched. */
+export async function deleteExampleData(): Promise<void> {
+  const { error } = await createClient().from("contacts").delete().eq("is_example", true);
+  if (error) throw error;
+}

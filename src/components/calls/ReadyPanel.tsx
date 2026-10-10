@@ -40,7 +40,10 @@ function PersonCard({
         className="min-w-0 flex-1 py-2 text-left"
         title="Drag onto the calendar, or click and then click a time slot"
       >
-        <span className="block truncate text-sm font-semibold">{name}</span>
+        <span className="block truncate text-sm font-semibold">
+          {name}
+          {contact.is_example && <span className="ml-1.5 font-mono text-[9px] font-medium uppercase text-warning">Example</span>}
+        </span>
         <span className="block truncate text-xs text-muted">
           {[contact.title, contact.company].filter((s) => s.trim()).join(" · ") || "No company yet"}
         </span>

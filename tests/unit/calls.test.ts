@@ -22,6 +22,7 @@ function contact(id: string, stage: Contact["stage"], updated_at = "2026-10-01T0
     follow_up_date: null,
     notes: "",
     linkedin_url: null,
+    is_example: false,
     created_at: "2026-10-01T00:00:00Z",
     updated_at,
   };

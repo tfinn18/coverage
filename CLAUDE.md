@@ -15,7 +15,11 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
 - `npm run dev` — local dev server at http://localhost:3000
 - `npm run lint` / `npm run typecheck` / `npm test` — ESLint, tsc, unit tests (`tests/unit`)
 - `npm run test:rls` — proves users can't see each other's rows; needs `.env.local` with two test accounts
+- `npm run test:e2e` — Playwright: one end-to-end flow plus axe accessibility scans (light + dark) on every page;
+  starts/reuses the dev server and signs in as test account A
 - `npm run build` — production build
+- CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and build on every push. RLS and e2e tests
+  need the real Supabase project and test accounts, so they run locally.
 
 ## Layout
 - `src/app/(auth)/*` — login, signup, forgot/reset password, check-email (public; logged-in users are redirected away from login/signup)
@@ -53,6 +57,11 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
 - Contacts grid: edits update local state immediately and save via `useAutosave` (debounced, merged per contact).
   Row order is recomputed only when sort/filter/search change or rows are added/removed, so rows never jump while
   typing. Cells carry `data-row`/`data-col` for keyboard navigation (Enter/Shift+Enter/arrows).
+- Example data (`src/lib/examples.ts`): fictional people at fictional firms, `is_example = true`, tagged in the UI
+  and removable in one click. Landing-page screenshots in `public/screenshots/` are captured from it (never show a
+  real email; swap it for you@example.com).
+- Theme: `ThemeToggle`/`toggleTheme()` set `data-theme` and save it to localStorage; the inline script in the root
+  layout applies it before paint.
 - Never read the clock (`Date.now()`, `new Date()`) during render in a component that can prerender; compute it in
   the browser (event handlers or after data loads). Server Supabase clients call `connection()` first.
 - Calendar: FullCalendar is pinned to v6.1.x (MIT core + interaction plugin only; no premium plugins). Calls are

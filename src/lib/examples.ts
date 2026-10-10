@@ -1,0 +1,156 @@
+import type { ContactStage } from "@/lib/database.types";
+import { localDateString } from "@/lib/contacts/followup";
+
+type ExampleContact = {
+  key: string;
+  name: string;
+  company: string;
+  title: string;
+  stage: ContactStage;
+  /** Days from today, or null for no follow-up. */
+  followUp: number | null;
+  notes: string;
+  /** Book a call this many weekdays from today at hour:minute (negative = in the past). */
+  call?: { weekdays: number; hour: number; minute: number };
+};
+
+// Fictional people at fictional firms, so nothing here can be mistaken for a real person.
+const EXAMPLES: ExampleContact[] = [
+  {
+    key: "maya",
+    name: "Maya Lindqvist",
+    company: "Northbridge Capital",
+    title: "Investment Banking Analyst",
+    stage: "called",
+    followUp: -3,
+    notes: "Great call about the TMT group. Send a thank-you note.",
+    call: { weekdays: -1, hour: 11, minute: 0 },
+  },
+  {
+    key: "daniel",
+    name: "Daniel Okafor",
+    company: "Halcyon Partners",
+    title: "Associate, M&A",
+    stage: "call_scheduled",
+    followUp: null,
+    notes: "Alum from my school. Ask how he recruited from a non-target.",
+    call: { weekdays: 1, hour: 10, minute: 0 },
+  },
+  {
+    key: "priya",
+    name: "Priya Desai",
+    company: "Meridian & Co.",
+    title: "Vice President, Healthcare",
+    stage: "call_scheduled",
+    followUp: null,
+    notes: "Referred by Maya.",
+    call: { weekdays: 2, hour: 14, minute: 30 },
+  },
+  {
+    key: "sam",
+    name: "Sam Whitaker",
+    company: "Ashford Lane Advisors",
+    title: "Analyst, Restructuring",
+    stage: "call_scheduled",
+    followUp: 1,
+    notes: "Said any afternoon next week works.",
+  },
+  {
+    key: "elena",
+    name: "Elena Rossi",
+    company: "Kestrel Securities",
+    title: "Sales & Trading Analyst",
+    stage: "contacted",
+    followUp: 0,
+    notes: "Emailed after the info session. Follow up today.",
+  },
+  {
+    key: "marcus",
+    name: "Marcus Bell",
+    company: "Harbor Point Equity",
+    title: "Private Equity Associate",
+    stage: "contacted",
+    followUp: 5,
+    notes: "",
+  },
+  {
+    key: "grace",
+    name: "Grace Kim",
+    company: "Northbridge Capital",
+    title: "Campus Recruiting",
+    stage: "contacted",
+    followUp: null,
+    notes: "Met at the career fair booth.",
+  },
+  {
+    key: "omar",
+    name: "Omar Haddad",
+    company: "Wexford Hill Capital",
+    title: "Analyst, Leveraged Finance",
+    stage: "call_scheduled",
+    followUp: null,
+    notes: "Prep two questions about the analyst program.",
+    call: { weekdays: 1, hour: 16, minute: 0 },
+  },
+  {
+    key: "leah",
+    name: "Leah Brooks",
+    company: "Crestline Partners",
+    title: "Associate, Equity Research",
+    stage: "call_scheduled",
+    followUp: null,
+    notes: "",
+    call: { weekdays: 3, hour: 9, minute: 30 },
+  },
+  {
+    key: "tom",
+    name: "Tom Alvarez",
+    company: "Summit Ridge Advisors",
+    title: "Analyst",
+    stage: "called",
+    followUp: 14,
+    notes: "Check back before superday season.",
+    call: { weekdays: -2, hour: 15, minute: 0 },
+  },
+];
+
+function addDays(date: Date, days: number): Date {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+/** Moves `count` weekdays from `from` (Mon–Fri only). Negative counts go backwards. */
+export function addWeekdays(from: Date, count: number): Date {
+  const step = count < 0 ? -1 : 1;
+  let d = new Date(from);
+  let left = Math.abs(count);
+  while (left > 0) {
+    d = addDays(d, step);
+    if (d.getDay() !== 0 && d.getDay() !== 6) left -= 1;
+  }
+  return d;
+}
+
+export const EXAMPLE_COUNT = EXAMPLES.length;
+
+/** The example contacts and calls, with dates relative to `now` so follow-ups and calls always look current. */
+export function buildExampleData(now: Date) {
+  const contacts = EXAMPLES.map((e) => ({
+    key: e.key,
+    name: e.name,
+    company: e.company,
+    title: e.title,
+    stage: e.stage,
+    follow_up_date: e.followUp === null ? null : localDateString(addDays(now, e.followUp)),
+    notes: e.notes,
+    linkedin_url: null,
+    is_example: true,
+  }));
+  const calls = EXAMPLES.filter((e) => e.call).map((e) => {
+    const day = addWeekdays(now, e.call!.weekdays);
+    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), e.call!.hour, e.call!.minute);
+    return { key: e.key, startsAt: start };
+  });
+  return { contacts, calls };
+}

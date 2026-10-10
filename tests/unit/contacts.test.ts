@@ -18,6 +18,7 @@ function contact(overrides: Partial<Contact> & { id: string }): Contact {
     follow_up_date: null,
     notes: "",
     linkedin_url: null,
+    is_example: false,
     created_at: "2026-10-01T00:00:00Z",
     updated_at: "2026-10-01T00:00:00Z",
     ...overrides,
@@ -105,5 +106,26 @@ describe("CSV export", () => {
       "Company,Name,Title,Stage,Follow-up date,Notes,LinkedIn URL\r\n" +
         'Lazard,Eve Li,Analyst,Call scheduled,2026-10-20,"Ask about RX, M&A",https://www.linkedin.com/in/eveli\r\n',
     );
+  });
+});
+
+describe("example data", async () => {
+  const { addWeekdays, buildExampleData } = await import("@/lib/examples");
+  const now = new Date(2026, 9, 9, 9, 0); // Friday, Oct 9 2026
+  const data = buildExampleData(now);
+
+  it("is clearly marked and starts in a realistic state", () => {
+    expect(data.contacts.every((c) => c.is_example)).toBe(true);
+    const due = data.contacts.filter((c) => c.follow_up_date && c.follow_up_date <= "2026-10-09");
+    expect(due.length).toBeGreaterThanOrEqual(2); // something overdue and something due today
+    // Someone at Call scheduled has no call yet, so "Ready to schedule" isn't empty.
+    const booked = new Set(data.calls.map((c) => c.key));
+    expect(data.contacts.some((c) => c.stage === "call_scheduled" && !booked.has(c.key))).toBe(true);
+  });
+
+  it("books calls on weekdays relative to today", () => {
+    for (const c of data.calls) expect([1, 2, 3, 4, 5]).toContain(c.startsAt.getDay());
+    expect(addWeekdays(now, 1).getDay()).toBe(1); // Friday + 1 weekday = Monday
+    expect(addWeekdays(now, -1).getDay()).toBe(4); // Thursday
   });
 });

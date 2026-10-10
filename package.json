@@ -12,7 +12,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:rls": "vitest run --config vitest.rls.config.mts"
+    "test:rls": "vitest run --config vitest.rls.config.mts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.21",
@@ -27,6 +28,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.64.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^24.19.2",

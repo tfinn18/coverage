@@ -1,6 +1,7 @@
 "use client";
 
-import { Menu, MenuFormItem, MenuLink } from "@/components/ui/Menu";
+import { toggleTheme } from "@/components/ThemeToggle";
+import { Menu, MenuFormItem, MenuItem, MenuLink } from "@/components/ui/Menu";
 import type { CurrentUser } from "@/lib/auth/user";
 import { cn } from "@/lib/cn";
 
@@ -60,6 +61,14 @@ export function UserMenu({ user }: { user: CurrentUser }) {
           <MenuLink href="/account" onSelect={close}>
             Account settings
           </MenuLink>
+          <MenuItem
+            onSelect={() => {
+              toggleTheme();
+              close();
+            }}
+          >
+            Toggle dark mode
+          </MenuItem>
           <MenuFormItem action="/auth/signout">Log out</MenuFormItem>
         </>
       )}
