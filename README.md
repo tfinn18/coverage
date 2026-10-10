@@ -4,6 +4,8 @@
 spreadsheet-style contact grid plus a weekly call calendar. In banking, your "coverage" is the people and
 companies you're responsible for staying in touch with; this app is a student's coverage list.
 
+**Live demo:** https://coverage-green.vercel.app
+
 > Work in progress. Full documentation (screenshots, architecture, security model, design decisions) lands in a later phase.
 
 ## Run locally
