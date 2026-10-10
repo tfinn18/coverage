@@ -48,9 +48,7 @@ export default function Home() {
             Cover your network.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-2">
-            In banking, your <em>coverage</em> is the people and companies you&apos;re responsible for staying close
-            to. Coverage is that list for your recruiting season: every banker, alum, and recruiter you&apos;re talking
-            to, where each conversation stands, and the calls on your calendar.
+            Coverage is a list for your recruiting season: every banker, alum, and recruiter you’re talking to, where each conversation stands, and the calls on your calendar.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link href="/signup" className={buttonClasses("primary", "lg")}>

@@ -1,11 +1,9 @@
 # Coverage
 
+Coverage is a list for your recruiting season: every banker, alum, and recruiter you’re talking to, where each conversation stands, and the calls on your calendar.
+
 **Cover your network.** A private networking tracker for college students recruiting for internships: a
 spreadsheet-style contact grid plus a weekly call calendar.
-
-In banking, your *coverage* is the people and companies you're responsible for staying in touch with. This app is a
-student's coverage list: every banker, alum, and recruiter you're talking to, where each conversation stands, and the
-calls on your calendar.
 
 **Live demo:** https://coverage-green.vercel.app · sign up free, then click **Try with example data**.
 
