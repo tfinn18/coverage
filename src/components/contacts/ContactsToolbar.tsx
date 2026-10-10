@@ -63,6 +63,7 @@ export function ContactsToolbar({
   onFollowUpsDue,
   counts,
   onAdd,
+  onImport,
   onExport,
   canExport,
   saveStatus,
@@ -75,6 +76,7 @@ export function ContactsToolbar({
   onFollowUpsDue: (value: boolean) => void;
   counts: Counts;
   onAdd: () => void;
+  onImport: () => void;
   onExport: () => void;
   canExport: boolean;
   saveStatus: SaveStatus;
@@ -107,6 +109,9 @@ export function ContactsToolbar({
         </div>
         <div className="ml-auto flex items-center gap-2">
           <SaveIndicator status={saveStatus} />
+          <Button variant="secondary" size="sm" onClick={onImport}>
+            Import
+          </Button>
           <Button variant="secondary" size="sm" onClick={onExport} disabled={!canExport}>
             Export CSV
           </Button>

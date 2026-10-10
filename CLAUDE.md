@@ -27,6 +27,10 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
 - `src/components/ui` — shared primitives (Button, TextField, Alert, Menu, Dialog, Toast)
 - `src/components/contacts` — the Contacts grid: `ContactsView` (state), `ContactsTable`/`ContactRow` (cells),
   `useAutosave` (debounced per-contact saves with retry)
+- `src/lib/import/` — import candidates, duplicate detection (name + company), CSV mapping (LinkedIn Connections.csv
+  or a tracker spreadsheet). `src/lib/pdf/` + `src/lib/linkedin/profile-pdf.ts` — pdf.js text → lines → profile fields
+- `src/components/import` — Import dialog: PDF / CSV / URL sources, then an editable, windowed review table
+- `tests/fixtures/` — sample LinkedIn PDFs (regenerate with `node scripts/make-pdf-fixtures.mjs`) and CSVs
 - `supabase/migrations/*.sql` — schema source of truth; applied by pasting into the Supabase SQL Editor, in order
 - `src/lib/database.types.ts` — hand-maintained DB types; update alongside migrations
 
@@ -48,5 +52,8 @@ a spreadsheet-style Contacts grid plus a weekly Call Schedule calendar.
   typing. Cells carry `data-row`/`data-col` for keyboard navigation (Enter/Shift+Enter/arrows).
 - Never read the clock (`Date.now()`, `new Date()`) during render in a component that can prerender; compute it in
   the browser (event handlers or after data loads). Server Supabase clients call `connection()` first.
+- Imports: never scrape LinkedIn or call unofficial APIs; only parse files/links the user provides. Every import
+  goes through the review step, skips duplicates, and LinkedIn imports start at Contacted with blank follow-up/notes.
+  PDFs are parsed in the browser (pdf.js loaded lazily; worker copied to `public/` by `predev`/`prebuild`).
 - CSV export neutralizes spreadsheet formulas (`=`, `+`, `-`, `@`) and round-trips with the generic CSV import.
 - Env vars are documented in `.env.example`; `.env.local` is git-ignored.

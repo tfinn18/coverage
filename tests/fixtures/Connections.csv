@@ -1,0 +1,10 @@
+Notes:
+"When exporting your connection data, you may notice that some of the email addresses are missing. You will only see email addresses for connections who have allowed their connections to see or download their email address using this setting https://www.linkedin.com/psettings/privacy/email. You can learn more here https://www.linkedin.com/help/linkedin/answer/261"
+
+First Name,Last Name,URL,Email Address,Company,Position,Connected On
+Ava,Chen,https://www.linkedin.com/in/ava-chen-8b2a91,,Goldman Sachs,Investment Banking Analyst,03 Oct 2026
+Marcus,O'Neill,https://www.linkedin.com/in/marcusoneill,marcus@example.com,Morgan Stanley,"Vice President, M&A",28 Sep 2026
+José,Álvarez,https://www.linkedin.com/in/jose-alvarez-1a2b3c,,"Lazard",Analyst - Restructuring,15 Aug 2026
+Priya,Raman,https://www.linkedin.com/in/priya-raman-2027,,"Bryant University","Student, ""Finance Society"" President",02 Jan 2026
+Ava,Chen,https://www.linkedin.com/in/ava-chen-8b2a91,,Goldman Sachs,Investment Banking Analyst,03 Oct 2026
+Lee,,https://www.linkedin.com/in/lee,,,,01 Jan 2026

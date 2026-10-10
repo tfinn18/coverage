@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { cn } from "@/lib/cn";
 
 /**
@@ -13,16 +13,17 @@ export function Dialog({
   title,
   description,
   children,
-  className,
+  size = "md",
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   description?: React.ReactNode;
   children: React.ReactNode;
-  className?: string;
+  size?: "md" | "xl";
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -34,20 +35,24 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      onCancel={(e) => {
+        // Escape asks the owner to close, so it can refuse (e.g. while saving).
+        e.preventDefault();
+        onClose();
+      }}
       onClick={(e) => {
         // Clicking the backdrop (the dialog element itself, outside its content) closes it.
         if (e.target === ref.current) onClose();
       }}
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
       className={cn(
-        "m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-rule bg-surface p-0 text-ink shadow-xl backdrop:bg-ink/40",
-        className,
+        "m-auto w-[calc(100%-2rem)] rounded-lg border border-rule bg-surface p-0 text-ink shadow-xl backdrop:bg-ink/40",
+        size === "md" ? "max-w-md" : "max-w-5xl",
       )}
     >
       {open && (
         <div className="p-5 sm:p-6">
-          <h2 id="dialog-title" className="font-serif text-xl font-semibold">
+          <h2 id={titleId} className="font-serif text-xl font-semibold">
             {title}
           </h2>
           {description && <div className="mt-1 text-sm text-muted">{description}</div>}

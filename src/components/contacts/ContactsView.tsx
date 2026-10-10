@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ImportDialog } from "@/components/import/ImportDialog";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Toast, type ToastData } from "@/components/ui/Toast";
@@ -56,6 +57,7 @@ export function ContactsView() {
   const [order, setOrder] = useState<string[]>([]);
   const [toast, setToast] = useState<ToastData | null>(null);
   const [linkedInFor, setLinkedInFor] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(
     params.get("welcome")
       ? "Welcome to Coverage! Your account is ready."
@@ -198,6 +200,16 @@ export function ContactsView() {
     showToast({ message: `Exported ${rows.length} contact${rows.length === 1 ? "" : "s"}${filtered ? " (current filter)" : ""}.` });
   }
 
+  function onImported(added: Contact[], skipped: number) {
+    setImportOpen(false);
+    const next = [...added, ...contactsRef.current];
+    updateContacts(() => next);
+    applyOptions(options, next);
+    const parts = [`Imported ${added.length.toLocaleString()} contact${added.length === 1 ? "" : "s"}.`];
+    if (skipped > 0) parts.push(`Skipped ${skipped.toLocaleString()} duplicate${skipped === 1 ? "" : "s"}.`);
+    showToast({ message: parts.join(" ") });
+  }
+
   const linkedInContact = linkedInFor ? byId.get(linkedInFor) : undefined;
 
   return (
@@ -246,7 +258,7 @@ export function ContactsView() {
           </p>
         </>
       ) : contacts.length === 0 ? (
-        <EmptyState onAdd={addContact} />
+        <EmptyState onAdd={addContact} onImport={() => setImportOpen(true)} />
       ) : (
         <>
           <ContactsToolbar
@@ -258,6 +270,7 @@ export function ContactsView() {
             onFollowUpsDue={(followUpsDue) => applyOptions({ ...options, followUpsDue })}
             counts={counts}
             onAdd={addContact}
+            onImport={() => setImportOpen(true)}
             onExport={exportCsv}
             canExport={rows.length > 0}
             saveStatus={saveStatus}
@@ -303,12 +316,16 @@ export function ContactsView() {
         />
       )}
 
+      {importOpen && (
+        <ImportDialog existing={contacts ?? []} onClose={() => setImportOpen(false)} onImported={onImported} />
+      )}
+
       <Toast toast={toast} onDismiss={dismissToast} />
     </div>
   );
 }
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
+function EmptyState({ onAdd, onImport }: { onAdd: () => void; onImport: () => void }) {
   return (
     <div className="rounded-lg border border-dashed border-rule-strong bg-surface px-6 py-14 text-center">
       <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-brass">Your coverage list</p>
@@ -317,9 +334,12 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
         Add the bankers, alumni, and recruiters you&apos;re talking to. Track where each conversation stands and when
         to follow up.
       </p>
-      <Button className="mt-6" onClick={onAdd}>
-        + Add your first contact
-      </Button>
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <Button onClick={onAdd}>+ Add your first contact</Button>
+        <Button variant="secondary" onClick={onImport}>
+          Import from LinkedIn or CSV
+        </Button>
+      </div>
     </div>
   );
 }
