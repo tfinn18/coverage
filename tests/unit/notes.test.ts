@@ -8,6 +8,7 @@ import {
   notesDocFromText,
   notesToText,
   parseNotesDoc,
+  pasteItems,
   setItem,
   splitItem,
   thankYouText,
@@ -157,5 +158,32 @@ describe("list editing", () => {
   it("typing into an empty list creates its first item", () => {
     expect(setItem([], 0, "First")).toEqual(["First"]);
     expect(setItem(["a", "b"], 1, "B")).toEqual(["a", "B"]);
+  });
+});
+
+describe("pasting a list", () => {
+  it("splits pasted lines into separate items and strips numbers and bullets", () => {
+    const pasted = "1. What does your day look like?\n2) How did you get into IB?\n- Why Citi?\n\n• Any advice?";
+    const result = pasteItems([""], 0, 0, 0, pasted);
+    expect(result?.items).toEqual([
+      "What does your day look like?",
+      "How did you get into IB?",
+      "Why Citi?",
+      "Any advice?",
+    ]);
+    expect(result?.focusIndex).toBe(3);
+    expect(result?.caret).toBe("Any advice?".length);
+  });
+
+  it("keeps text around the cursor and the other items", () => {
+    const result = pasteItems(["a", "start end", "z"], 1, 6, 6, "one\ntwo");
+    expect(result?.items).toEqual(["a", "start one", "twoend", "z"]);
+    expect(result?.focusIndex).toBe(2);
+    expect(result?.caret).toBe(3);
+  });
+
+  it("leaves a single line to the browser", () => {
+    expect(pasteItems([""], 0, 0, 0, "just one question")).toBeNull();
+    expect(pasteItems([""], 0, 0, 0, "1. just one question\n")).toBeNull();
   });
 });

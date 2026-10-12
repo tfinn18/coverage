@@ -151,3 +151,40 @@ export function setItem(items: string[], index: number, value: string): string[]
   next[index] = value;
   return next;
 }
+
+/** Strips a leading bullet or number ("1.", "2)", "-", "•", "Q3:") from one pasted line. */
+function stripListMarker(line: string): string {
+  return line.replace(/^\s*(?:(?:\d{1,3}|[a-zA-Z])[.)]\s+|Q\d{1,3}[.:)]\s*|[-*•–—▪◦‣]\s+)/, "").trim();
+}
+
+/**
+ * Pasting a multi-line list into item `index`: each non-empty line becomes its own item, with any
+ * bullet or number stripped. The first line joins the text before the selection and the last line
+ * keeps the text after it. Returns null for a single line, so the browser pastes it normally.
+ */
+export function pasteItems(
+  items: string[],
+  index: number,
+  selStart: number,
+  selEnd: number,
+  pasted: string,
+): { items: string[]; focusIndex: number; caret: number } | null {
+  const pieces = pasted
+    .split(/\r?\n/)
+    .map(stripListMarker)
+    .filter(Boolean);
+  if (pieces.length < 2) return null;
+  const current = items[index] ?? "";
+  const before = current.slice(0, selStart);
+  const after = current.slice(selEnd);
+  const inserted = [...pieces];
+  inserted[0] = before + inserted[0];
+  const lastIndex = inserted.length - 1;
+  const caret = inserted[lastIndex].length;
+  inserted[lastIndex] += after;
+  return {
+    items: [...items.slice(0, index), ...inserted, ...items.slice(index + 1)],
+    focusIndex: index + lastIndex,
+    caret,
+  };
+}

@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 import { cn } from "@/lib/cn";
-import { mergeWithPrevious, setItem, splitItem } from "@/lib/notes/doc";
+import { mergeWithPrevious, pasteItems, setItem, splitItem } from "@/lib/notes/doc";
 import { AutoTextarea } from "./AutoTextarea";
 
 /**
@@ -65,6 +65,15 @@ export function ListEditor({
     }
   }
 
+  function onPaste(e: React.ClipboardEvent<HTMLTextAreaElement>, index: number) {
+    const el = e.currentTarget;
+    const result = pasteItems(shown, index, el.selectionStart, el.selectionEnd, e.clipboardData.getData("text"));
+    if (!result) return;
+    e.preventDefault();
+    pendingFocus.current = { index: result.focusIndex, caret: result.caret };
+    onChange(result.items);
+  }
+
   const ListTag = ordered ? "ol" : "ul";
   return (
     <ListTag
@@ -83,6 +92,7 @@ export function ListEditor({
             value={item}
             onChange={(e) => onChange(setItem(shown, index, e.target.value))}
             onKeyDown={(e) => onKeyDown(e, index)}
+            onPaste={(e) => onPaste(e, index)}
             placeholder={placeholder}
             aria-label={`${itemLabel} ${index + 1}`}
             className="-ml-2"
